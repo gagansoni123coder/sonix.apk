@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: npm install
         - name: Install Capacitor Assets
-        run: npm install @capacitor/ --save-dev
+        run: npm install @capacitor/sonix_512_under256kb.png --save-dev
 
       - name: Generate App Icons
         run: npx capacitor-assets generate --iconBackgroundColor '#ff0000'
