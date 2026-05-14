@@ -16,29 +16,22 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Capacitor
+      - name: Create WWW Folder
         run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-
-      - name: Create package.json
-        run: |
-          echo '{
-            "name":"sonix",
-            "version":"1.0.0"
-          }' > package.json
-
-      - name: Init Capacitor
-        run: |
-          npx cap init "SoniX Esports" "com.sonix.esports" --web-dir=www.
-
-          - name: Create WWW Folder
-        run: |
-          mkdir www
+          mkdir -p www
           cp -r *.html www/ || true
           cp -r *.css www/ || true
           cp -r *.js www/ || true
           cp -r assets www/assets || true
           cp -r images www/images || true
+          cp manifest.json www/ || true
+          cp sw.js www/ || true
+
+      - name: Install Capacitor
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Init Capacitor
+        run: npx cap init "SoniX Esports" "com.sonix.esports" --web-dir=www
 
       - name: Add Android
         run: npx cap add android
