@@ -1,227 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
+  <title>Login</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>SoniX Esports</title>
+  <link rel="stylesheet" href="login.css">
   <link rel="manifest" href="manifest.json">
-
-  <link rel="stylesheet" href="index.css">
-
-  <!-- ICONS -->
-  <link rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
 </head>
 
 <body>
 
-<!-- 🔥 BG GLOW -->
-<div class="bg-glow"></div>
+<div class="login-container">
+  <div class="login-box">
 
-<!-- 🔥 TOP -->
-<div class="topbar">
+    <h2 class="title">🔐 LOGIN</h2>
 
-  <div class="logo-box">
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
 
-    <img src="logo.png" class="logo">
+      <button type="submit" id="loginBtn">
+  <span class="btn-text">LOGIN</span>
+  <span class="loader"></span>
+</button>
 
-    <div class="title">
-      SoniX Esports
-    </div>
-
-  </div>
-
-</div>
-
-<!-- 🔥 HERO -->
-<div class="hero">
-
-  <h1>
-    Ultimate Free Fire <br>
-    Esports Experience
-  </h1>
-
-  <p>
-    Compete in tournaments, earn rewards,
-    join pro rooms, and dominate the battlefield
-    with the next generation gaming platform.
-  </p>
-
-  <!-- DOWNLOAD -->
-  <button class="download-btn"
-  onclick="downloadAPK()">
-
-    <i class="fa-solid fa-download"></i>
-
-    Download Now
-
-  </button>
-
-</div>
-
-<!-- 🔥 HOW WORKS -->
-<div class="section-title">
-
-  How SoniX Esports Works
-
-</div>
-
-<div class="section-sub">
-
-  Your journey becomes seamless
-  with these simple steps
-
-</div>
-
-<!-- 🔥 STEPS -->
-<div class="steps">
-
-  <!-- CARD -->
-  <div class="step-card">
-
-    <div class="step-icon">
-      <i class="fa-solid fa-download"></i>
-    </div>
-
-    <div class="step-title">
-      Download App
-    </div>
-
-    <div class="step-text">
-      Quick and Secure Download
-      from our official website.
-    </div>
-
-  </div>
-
-  <!-- CARD -->
-  <div class="step-card">
-
-    <div class="step-icon">
-      <i class="fa-solid fa-mobile-screen"></i>
-    </div>
-
-    <div class="step-title">
-      Install App
-    </div>
-
-    <div class="step-text">
-      Easy installation process
-      with seamless onboarding.
-    </div>
-
-  </div>
-
-  <!-- CARD -->
-  <div class="step-card">
-
-    <div class="step-icon">
-      <i class="fa-solid fa-users"></i>
-    </div>
-
-    <div class="step-title">
-      Create Account
-    </div>
-
-    <div class="step-text">
-      Simple account creation flow
-      in under 30 seconds.
-    </div>
-
-  </div>
-
-  <!-- CARD -->
-  <div class="step-card">
-
-    <div class="step-icon">
-      <i class="fa-solid fa-trophy"></i>
-    </div>
-
-    <div class="step-title">
-      Start Earning
-    </div>
-
-    <div class="step-text">
-      Join matches, play your best,
-      and earn rewards.
-    </div>
-
-  </div>
-
-</div>
-
-<!-- 🔥 FEATURES -->
-<div class="feature-section">
-
-  <div class="feature-title">
-
-    SoniX Esports
-
-  </div>
-
-  <div class="feature-sub">
-
-    The premier destination
-    for competitive gamers.
-
-  </div>
-
-  <!-- FEATURES -->
-  <div class="features">
-
-    <div class="feature-card">
-
-      <i class="fa-solid fa-shield-halved"></i>
-
-      <h3>Fair Play</h3>
-
-      <p>
-        All matches are conducted fairly.
+      <p class="register-text">
+        Don’t have an account?
+        <a href="register.html">Register Now</a>
       </p>
 
-    </div>
-
-    <div class="feature-card">
-
-      <i class="fa-solid fa-bolt"></i>
-
-      <h3>Fast Performance</h3>
-
-      <p>
-        Lag-free gaming experience.
-      </p>
-
-    </div>
-
-    <div class="feature-card">
-
-      <i class="fa-solid fa-headset"></i>
-
-      <h3>24/7 Support</h3>
-
-      <p>
-        We are always here to help.
-      </p>
-
-    </div>
+      <p id="msg"></p>
+    </form>
 
   </div>
-
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <script>
+const supabaseClient = supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
 
-function downloadAPK(){
+const form = document.getElementById("loginForm");
+const btn = document.getElementById("loginBtn");
 
-  // APK LINK
-  window.location.href =
-  "https://drive.google.com/file/d/1dFjbgALjF5holOXQHX34HPGeoOdUR_mZ/view?usp=drivesdk";
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
+  btn.classList.add("loading");
+  btn.disabled = true;
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  btn.classList.remove("loading");
+  btn.disabled = false;
+
+  if (error) {
+    document.getElementById("msg").innerText = error.message;
+  } else {
+    btn.innerText = "SUCCESS ✔";
+    setTimeout(() => {
+      window.location.href = "home.html";
+    }, 800);
+  }
+});
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
 }
-
 </script>
 
 </body>
