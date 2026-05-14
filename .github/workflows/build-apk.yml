@@ -29,7 +29,16 @@ jobs:
 
       - name: Init Capacitor
         run: |
-          npx cap init "SoniX Esports" "com.sonix.esports" --web-dir=.
+          npx cap init "SoniX Esports" "com.sonix.esports" --web-dir=www.
+
+          - name: Create WWW Folder
+        run: |
+          mkdir www
+          cp -r *.html www/ || true
+          cp -r *.css www/ || true
+          cp -r *.js www/ || true
+          cp -r assets www/assets || true
+          cp -r images www/images || true
 
       - name: Add Android
         run: npx cap add android
