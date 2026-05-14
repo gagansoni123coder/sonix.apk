@@ -15,51 +15,53 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 21
+          distribution: 'temurin'
+          java-version: '21'
 
       - name: Create package.json
         run: |
           echo '{
-            "name":"sonix",
-            "version":"1.0.0",
-            "dependencies":{
-              "@capacitor/core":"latest",
-              "@capacitor/cli":"latest",
-              "@capacitor/android":"latest"
-            }
+            "name": "sonix",
+            "version": "1.0.0"
           }' > package.json
 
       - name: Install dependencies
-        run: npm install
-        - name: Install Capacitor Assets
-        run: npm install @capacitor/sonix_512_under256kb.png --save-dev
-
-      - name: Generate App Icons
-        run: npx capacitor-assets generate --iconBackgroundColor '#ff0000'
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/assets --save-dev
 
       - name: Create WWW folder
         run: |
-          mkdir -p www
-          cp -r *.html www/ || true
-          cp -r *.css www/ || true
-          cp -r *.js www/ || true
-          cp -r *.json www/ || true
+          mkdir www
+          cp *.html www/ || true
+          cp *.css www/ || true
+          cp *.js www/ || true
           cp -r assets www/assets || true
           cp -r images www/images || true
-          cp -r img www/img || true
 
       - name: Init Capacitor
-        run: npx cap init "SoniX Esports" "com.sonix.esports" --web-dir=www
+        run: |
+          npx cap init "SoniX Esports" "com.sonix.esports" --web-dir=www
 
       - name: Add Android
-        run: npx cap add android
+        run: |
+          npx cap add android
+
+      - name: Generate App Icon
+        run: |
+          npx capacitor-assets generate --android
 
       - name: Sync Android
-        run: npx cap sync android
+        run: |
+          npx cap sync android
+
+      - name: Set Login Page
+        run: |
+          cp login.html www/index.html || true
 
       - name: Build APK
         run: |
