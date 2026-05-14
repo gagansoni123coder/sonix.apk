@@ -47,3 +47,13 @@ jobs:
         with:
           name: sonix-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+- name: Setup Node
+  uses: actions/setup-node@v4
+  with:
+    node-version: 20
+- name: Setup Java
+  uses: actions/setup-java@v4
+  with:
+    distribution: 'temurin'
+    java-version: '21'
