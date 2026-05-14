@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoniX Result Panel</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
+
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,#3a000b,#050505 55%,#000);
+  color:#fff;
+  padding:18px;
+}
+
+.topbar{
+  background:#090909;
+  border:1px solid #ff315f;
+  border-radius:24px;
+  padding:22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 0 35px rgba(255,0,70,.45);
+  margin-bottom:22px;
+}
+
+.topbar h1{
+  font-size:30px;
+  text-shadow:0 0 18px #ff315f;
+}
+
+.topbar p{color:#aaa}
+
+.live-btn{
+  background:linear-gradient(135deg,#ff315f,#9b001f);
+  color:#fff;
+  border:none;
+  padding:14px 24px;
+  border-radius:18px;
+  font-weight:800;
+  box-shadow:0 0 22px #ff315f;
+}
+
+.main{
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:22px;
+}
+
+.card,.preview{
+  background:rgba(12,12,12,.92);
+  border:1px solid rgba(255,50,90,.35);
+  border-radius:24px;
+  padding:20px;
+  margin-bottom:18px;
+  box-shadow:0 0 22px rgba(255,0,60,.18);
+}
+
+label,h2{
+  color:#ff5c82;
+  text-shadow:0 0 10px #ff0040;
+  margin-bottom:12px;
+  display:block;
+}
+
+input,select{
+  width:100%;
+  padding:15px;
+  margin:9px 0;
+  border:none;
+  outline:none;
+  border-radius:16px;
+  background:#151515;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.game-switch{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.game-btn{
+  padding:15px;
+  border:none;
+  border-radius:16px;
+  background:#160008;
+  color:#ffc1d0;
+  font-weight:900;
+  border:1px solid rgba(255,40,80,.4);
+  transition:.3s;
+}
+
+.game-btn.active{
+  background:linear-gradient(135deg,#ff0040,#8c001d);
+  color:#fff;
+  transform:scale(1.06);
+  box-shadow:0 0 25px #ff0040;
+}
+
+.field-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:center;
+}
+
+.player-field{
+  display:grid;
+  grid-template-columns:1.4fr .6fr .6fr .8fr;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.winner-field{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.add-btn,.publish-btn{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:18px;
+  font-weight:900;
+  color:#fff;
+  background:linear-gradient(135deg,#ff0040,#ff6b8a);
+  box-shadow:0 0 24px rgba(255,0,70,.65);
+  margin-top:10px;
+  cursor:pointer;
+}
+
+.preview{
+  position:sticky;
+  top:18px;
+}
+
+.preview h2{
+  text-align:center;
+  font-size:26px;
+  color:#fff;
+}
+
+.room-preview{
+  background:#151515;
+  padding:16px;
+  border-radius:18px;
+  text-align:center;
+  color:#ff6b8a;
+  font-weight:900;
+  margin:18px 0;
+}
+
+.winner{
+  padding:15px;
+  border-radius:18px;
+  margin:12px 0;
+  font-weight:900;
+  display:flex;
+  justify-content:space-between;
+}
+
+.gold{background:linear-gradient(90deg,#ffd24d,#ff9d00);color:#111}
+.silver{background:linear-gradient(90deg,#fff,#bfc7d0);color:#111}
+
+.stat{
+  background:#141414;
+  padding:15px;
+  border-radius:16px;
+  margin-top:12px;
+  color:#ff8aa3;
+}
+
+@media(max-width:850px){
+  .main{grid-template-columns:1fr}
+  .player-field{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>🏆 RESULTS PANEL</h1>
+    <p>Publish tournament results</p>
+  </div>
+  <button class="live-btn">ADMIN LIVE</button>
+</div>
+
+<div class="main">
+
+<div>
+
+<div class="card">
+  <label>🎯 GAME TYPE</label>
+  <div class="game-switch">
+    <button class="game-btn active" onclick="selectGame('FULLMAP',this)">FULL MAP</button>
+    <button class="game-btn" onclick="selectGame('CS1V1',this)">CS 1V1</button>
+    <button class="game-btn" onclick="selectGame('LW1V1',this)">LW 1V1</button>
+    <button class="game-btn" onclick="selectGame('CS2V2',this)">CS 2V2</button>
+    <button class="game-btn" onclick="selectGame('FREEMATCH',this)">FREE MATCH</button>
+  </div>
+</div>
+
+<div class="card">
+  <label>🎮 SELECT MATCH</label>
+  <select id="matchSelect"></select>
+</div>
+
+<div class="card">
+  <label>🧾 RESULT DETAILS</label>
+  <input id="roomNumber" placeholder="Room / Match Number">
+  <input id="title" placeholder="Result Title">
+  <input id="banner" placeholder="Banner Image URL">
+  <input id="organizedOn" placeholder="Organised on">
+  <input id="winningPrize" type="number" placeholder="Winning Prize">
+  <input id="perKill" type="number" placeholder="Per Kill">
+  <input id="entryFee" type="number" placeholder="Entry Fee">
+</div>
+
+<div class="card">
+  <h2>🥇 WINNERS</h2>
+  <div id="winnersContainer"></div>
+  <button class="add-btn" onclick="addWinnerField()">+ ADD WINNER</button>
+</div>
+
+<div class="card">
+  <h2>🔥 MVP & TOP KILLER</h2>
+  <input id="mvp" placeholder="MVP Name">
+  <input id="killer" placeholder="Top Killer">
+  <input id="kills" type="number" placeholder="Kills Count">
+</div>
+
+<div class="card">
+  <h2>⚔ MATCH RESULT PLAYERS</h2>
+  <div id="playersContainer"></div>
+  <button class="add-btn" onclick="addPlayerField()">+ ADD PLAYER</button>
+</div>
+
+<button class="publish-btn" onclick="publishResult()">🚀 PUBLISH RESULT</button>
+
+</div>
+
+<div class="preview">
+  <h2>MATCH RESULT PREVIEW</h2>
+
+  <div class="room-preview">
+    MATCH RESULT #<span id="previewRoom">0000</span>
+  </div>
+
+  <div class="winner gold">🥇 <span id="previewW1">Winner #1</span></div>
+  <div class="winner silver">🥈 <span id="previewW2">Winner #2</span></div>
+
+  <div class="stat">🔥 MVP: <span id="previewMvp">---</span></div>
+  <div class="stat">💀 TOP KILLER: <span id="previewKiller">---</span></div>
+</div>
+
+</div>
+
+<script>
+const client = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+let selectedGame = "FULLMAP";
+
+function selectGame(game, btn){
+  selectedGame = game;
+
+  document.querySelectorAll(".game-btn").forEach(b=>{
+    b.classList.remove("active");
+  });
+
+  btn.classList.add("active");
+}
+
+async function loadMatches(){
+
+  const { data, error } = await client
+    .from("matches")
+    .select("*")
+    .order("id", { ascending:false });
+
+  const select = document.getElementById("matchSelect");
+  select.innerHTML = "";
+
+  if(error || !data || data.length === 0){
+    select.innerHTML = `<option value="">No matches found</option>`;
+    return;
+  }
+
+  data.forEach(m=>{
+    select.innerHTML += `
+      <option value="${m.id}">
+        ${m.title || "Match #" + m.id}
+      </option>
+    `;
+  });
+}
+
+function addWinnerField(){
+
+  const container = document.getElementById("winnersContainer");
+  const count = container.querySelectorAll(".winnerName").length;
+
+  if(count >= 2){
+    alert("Abhi sirf 2 winners allowed hain");
+    return;
+  }
+
+  const div = document.createElement("div");
+  div.className = "winner-field";
+
+  div.innerHTML = `
+    <input class="winnerName" placeholder="Winner Name">
+  `;
+
+  container.appendChild(div);
+
+  setupWinnerPreview();
+}
+
+function setupWinnerPreview(){
+
+  const winners = document.querySelectorAll(".winnerName");
+
+  winners.forEach((input, index)=>{
+    input.oninput = () => {
+      const preview = document.getElementById("previewW" + (index + 1));
+      if(preview){
+        preview.innerText = input.value || "Winner #" + (index + 1);
+      }
+    };
+  });
+}
+
+function addPlayerField(){
+
+  const div = document.createElement("div");
+  div.className = "player-field";
+
+  div.innerHTML = `
+    <input class="playerName" placeholder="Player Name">
+    <input class="playerPosition" type="number" placeholder="Rank">
+    <input class="playerKills" type="number" placeholder="Kills">
+    <input class="playerWin" type="number" placeholder="Winning">
+  `;
+
+  document.getElementById("playersContainer").appendChild(div);
+}
+
+function live(id, preview){
+  document.getElementById(id).addEventListener("input", e=>{
+    document.getElementById(preview).innerText = e.target.value || "---";
+  });
+}
+
+live("roomNumber", "previewRoom");
+live("mvp", "previewMvp");
+live("killer", "previewKiller");
+
+async function publishResult(){
+
+  const winners = [];
+
+  document.querySelectorAll(".winnerName").forEach((input, index)=>{
+    const name = input.value.trim();
+
+    if(name){
+      winners.push({
+        name:name,
+        rank:index + 1
+      });
+    }
+  });
+
+  const players = [];
+
+  const names = document.querySelectorAll(".playerName");
+  const ranks = document.querySelectorAll(".playerPosition");
+  const killsList = document.querySelectorAll(".playerKills");
+  const wins = document.querySelectorAll(".playerWin");
+
+  for(let i = 0; i < names.length; i++){
+
+    if(!names[i].value.trim()) continue;
+
+    players.push({
+      name:names[i].value.trim(),
+      rank:Number(ranks[i].value || i + 1),
+      kills:Number(killsList[i].value || 0),
+      winning:Number(wins[i].value || 0)
+    });
+  }
+
+  const payload = {
+    game_type:selectedGame,
+    title:document.getElementById("title").value || "Tournament Result",
+    banner:document.getElementById("banner").value || "",
+    room_number:document.getElementById("roomNumber").value || "",
+    match_no:document.getElementById("roomNumber").value || "",
+    organized_on:document.getElementById("organizedOn").value || "",
+    winning_prize:Number(document.getElementById("winningPrize").value || 0),
+    per_kill:Number(document.getElementById("perKill").value || 0),
+    entry_fee:Number(document.getElementById("entryFee").value || 0),
+    winners:winners,
+    players:players,
+    kills:String(document.getElementById("kills").value || "0"),
+    mvp:document.getElementById("mvp").value || "",
+    top_killer:document.getElementById("killer").value || ""
+  };
+
+  const { data, error } = await client
+    .from("match_results")
+    .insert([payload])
+    .select("id, game_type");
+
+  if(error){
+    console.log("PUBLISH ERROR:", error);
+    alert(error.message);
+    return;
+  }
+
+  alert("🔥 RESULT PUBLISHED");
+
+  window.location.href =
+    `result.html?game=${selectedGame}&id=${data[0].id}`;
+}
+
+async function checkAdmin(){
+
+  const { data:{ user } } = await client.auth.getUser();
+
+  if(!user){
+    location.href = "admin-login.html";
+    return;
+  }
+
+  const { data } = await client
+    .from("users")
+    .select("is_admin")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if(!data?.is_admin){
+    location.href = "admin-login.html";
+  }
+}
+
+checkAdmin();
+loadMatches();
+addWinnerField();
+addWinnerField();
+addPlayerField();
+</script>
+
+</body>
+  </html>

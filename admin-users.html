@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Users</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      background: #0b0f1a;
+      color: white;
+      font-family: Arial;
+      padding: 20px;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .search-box {
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+      width: 200px;
+    }
+
+    .count-box {
+      background: #00ffcc;
+      color: black;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #111;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #222;
+      text-align: center;
+    }
+
+    th {
+      background: #00ffcc;
+      color: black;
+    }
+
+    tr:hover {
+      background: #1a1f2e;
+    }
+
+    .delete-btn {
+      background: red;
+      border: none;
+      padding: 6px 10px;
+      color: white;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>👑 All Users</h2>
+
+<div class="top-bar">
+  <input type="text" id="search" class="search-box" placeholder="Search user...">
+  <div class="count-box">Total: <span id="count">0</span></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>UID</th>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Coins</th>
+      <th>Refer</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="userTable"></tbody>
+</table>
+
+<script>
+const supabaseClient = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+let allUsers = [];
+
+// 🔥 Load Users
+async function loadUsers() {
+  const { data, error } = await supabaseClient
+    .from("users")
+    .select("*")
+    .order("uid", { ascending: true });
+
+  if (error) {
+    console.log(error);
+    alert("Error loading users");
+    return;
+  }
+
+  allUsers = data;
+  document.getElementById("count").innerText = data.length;
+
+  renderUsers(data);
+}
+
+// 🔥 Render Users
+function renderUsers(users) {
+  const table = document.getElementById("userTable");
+  table.innerHTML = "";
+
+  users.forEach(user => {
+    const row =` 
+      <tr>
+        <td>${user.uid}</td>
+        <td>${user.name}</td>
+        <td>${user.email}</td>
+        <td>${user.phone}</td>
+        <td>🪙 ${user.coins || 0}</td>
+        <td>${user.refer || "-"}</td>
+        <td>
+          <button class="delete-btn" onclick="deleteUser('${user.user_id}')">
+            Delete
+          </button>
+        </td>
+      </tr>
+    `;
+    table.innerHTML += row;
+  });
+}
+
+// 🔍 Search
+document.getElementById("search").addEventListener("input", (e) => {
+  const value = e.target.value.toLowerCase();
+
+  const filtered = allUsers.filter(user =>
+    (user.name && user.name.toLowerCase().includes(value)) ||
+    (user.email && user.email.toLowerCase().includes(value)) ||
+    (user.phone && user.phone.includes(value)) ||
+    (user.uid && user.uid.toString().includes(value))
+  );
+
+  renderUsers(filtered);
+});
+
+// ❌ Delete User
+async function deleteUser(user_id) {
+  const confirmDelete = confirm("Delete this user?");
+
+  if (!confirmDelete) return;
+
+  const { error } = await supabaseClient
+    .from("users")
+    .delete()
+    .eq("user_id", user_id);
+
+  if (error) {
+    console.log(error);
+    alert("Delete failed");
+    return;
+  }
+
+  alert("User deleted ✅");
+  loadUsers();
+}
+
+// 🚀 Load on start
+loadUsers();
+ async function checkAdmin(){
+
+  const {
+    data:{ user }
+  } = await client.auth.getUser();
+
+  if(!user){
+
+    window.location.href =
+    "admin-login.html";
+
+    return;
+  }
+
+  const { data } =
+  await client
+  .from("users")
+  .select("is_admin")
+  .eq("id",user.id)
+  .single();
+
+  if(!data?.is_admin){
+
+    window.location.href =
+    "admin-login.html";
+
+  }
+
+}
+
+checkAdmin();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wallet</title>
+  <link rel="stylesheet" href="wallet.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+<!-- TOP CARD -->
+<div class="top-card">
+  <h1>💼 My Wallet</h1>
+  <p>Total Coins</p>
+  <h2>💰 Coins: <span id="coins">0</span></h2>
+</div>
+
+<!-- BUTTON GRID -->
+<div class="menu">
+
+  <a href="deposit.html" class="menu-item">
+    <img src="deposit.png">
+    <div class="overlay"></div>
+  </a>
+
+  <a href="withdraw.html" class="menu-item">
+    <img src="withdraw.png">
+    <div class="overlay"></div>
+  </a>
+
+  <a href="transction.html" class="menu-item">
+    <img src="transction.png">
+    <div class="overlay"></div>
+  </a>
+  
+</div>
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+const supabaseClient = supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+// redirect
+function goDeposit(){
+  window.location.href = "deposit.html";
+}
+
+function withdraw(){
+  window.location.href = "withdraw.html";
+}
+
+ 
+function reward(){
+  alert("Rewards coming soon");
+}
+
+// load coins
+async function loadWallet(){
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if(!user){
+    window.location.href = "login.html";
+    return;
+  }
+
+  let { data } = await supabaseClient
+    .from("users")
+    .select("coins")
+    .eq("id", user.id)
+    .single();
+
+  document.getElementById("coins").innerText = data?.coins || 0;
+}
+
+loadWallet();
+  
+ async function loadCoins(){
+
+  const { data } = await supabaseClient.auth.getSession();
+  const user = data.session?.user;
+
+  if(!user) return;
+
+  const { data: userData } = await supabaseClient
+    .from("users")
+    .select("coins")
+    .eq("uid", user.id)
+    .single();
+
+  document.getElementById("coins").innerText = userData?.coins || 0;
+}
+
+loadCoins();
+  
+  supabaseClient
+  .channel("coins")
+  .on(
+    "postgres_changes",
+    { event: "UPDATE", schema: "public", table: "users" },
+    payload => {
+      loadCoins();
+    }
+  )
+  .subscribe();
+</script>
+
+</body>
+</html>

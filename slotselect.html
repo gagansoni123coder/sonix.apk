@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Select Slot</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+<body>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Segoe UI,sans-serif;
+}
+
+body{
+  min-height:100vh;
+  background:
+  radial-gradient(circle at top,#3a0000,#090909 55%,#000);
+  color:#fff;
+  padding:18px;
+  overflow-x:hidden;
+}
+
+/* RED GLOW */
+
+body::before{
+  content:"";
+  position:fixed;
+  width:450px;
+  height:450px;
+  background:red;
+  filter:blur(160px);
+  opacity:.18;
+  top:-180px;
+  left:-120px;
+  z-index:-1;
+}
+
+body::after{
+  content:"";
+  position:fixed;
+  width:350px;
+  height:350px;
+  background:#ff003c;
+  filter:blur(150px);
+  opacity:.12;
+  bottom:-120px;
+  right:-100px;
+  z-index:-1;
+}
+
+/* HEADER */
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:22px;
+}
+
+.title{
+  font-size:28px;
+  font-weight:900;
+  color:#ff4040;
+  text-shadow:0 0 18px red;
+}
+
+.subtitle{
+  color:#aaa;
+  margin-top:5px;
+  font-size:13px;
+}
+
+/* MATCH CARD */
+
+.match-card{
+  background:
+  linear-gradient(145deg,#170000,#101010);
+  border:1px solid rgba(255,0,0,.35);
+  border-radius:24px;
+  padding:18px;
+  margin-bottom:20px;
+  box-shadow:0 0 25px rgba(255,0,0,.18);
+}
+
+.match-banner{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  border-radius:18px;
+  margin-bottom:16px;
+  border:1px solid rgba(255,0,0,.3);
+}
+
+.match-card h2{
+  color:#ff4d4d;
+  margin-bottom:12px;
+  font-size:24px;
+}
+
+.match-card p{
+  color:#ddd;
+  margin:10px 0;
+  font-size:15px;
+}
+
+/* IGN INPUT */
+
+.ign-box{
+  margin:22px 0;
+}
+
+.ign-box label{
+  display:block;
+  margin-bottom:10px;
+  color:#ff6b6b;
+  font-weight:800;
+}
+
+.ign-box input{
+  width:100%;
+  padding:16px;
+  border:none;
+  outline:none;
+  border-radius:16px;
+  background:#111;
+  color:#fff;
+  border:1px solid rgba(255,0,0,.35);
+  box-shadow:0 0 15px rgba(255,0,0,.12);
+}
+
+.ign-box input::placeholder{
+  color:#777;
+}
+
+/* SLOT GRID */
+
+#slotBox{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+  margin-top:18px;
+}
+
+/* SLOT */
+
+.slot{
+  background:
+  linear-gradient(145deg,#1a0000,#111);
+  border:1px solid rgba(255,0,0,.35);
+  border-radius:20px;
+  padding:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  transition:.3s;
+  box-shadow:0 0 18px rgba(255,0,0,.15);
+}
+
+.slot:hover{
+  transform:translateY(-3px);
+  box-shadow:0 0 28px rgba(255,0,0,.3);
+}
+
+/* LEFT */
+
+.slot-left{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.slot-no{
+  font-size:17px;
+  font-weight:900;
+  color:#fff;
+}
+
+.team{
+  font-size:13px;
+  color:#ff7b7b;
+}
+
+.ign{
+  margin-top:4px;
+  font-size:12px;
+  color:#ccc;
+}
+
+/* BUTTON */
+
+.select-btn{
+  border:none;
+  background:
+  linear-gradient(45deg,#ff0000,#ff4d4d);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:900;
+  cursor:pointer;
+  transition:.3s;
+  box-shadow:0 0 15px rgba(255,0,0,.4);
+}
+
+.select-btn:hover{
+  transform:scale(1.06);
+  box-shadow:0 0 22px red;
+}
+
+/* BOOKED */
+
+.booked{
+  background:
+  linear-gradient(145deg,#2b0000,#180000);
+  border-color:#ff1f1f;
+  opacity:.88;
+}
+
+.booked .slot-no{
+  color:#ff4d4d;
+}
+
+.booked-text{
+  color:#ff4d4d;
+  font-weight:900;
+  font-size:14px;
+  text-shadow:0 0 12px red;
+}
+
+/* LOADING */
+
+.loading{
+  text-align:center;
+  margin-top:60px;
+  color:#ff6b6b;
+  font-size:18px;
+  font-weight:900;
+}
+
+/* EMPTY */
+
+.empty{
+  text-align:center;
+  margin-top:70px;
+  color:#888;
+  font-size:17px;
+  font-weight:800;
+}
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+  #slotBox{
+    grid-template-columns:1fr;
+  }
+
+  .title{
+    font-size:24px;
+  }
+
+  .match-banner{
+    height:150px;
+  }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="panel">
+
+  <h1 class="title">🎯 SELECT SLOT</h1>
+
+  <div id="matchInfo" class="match-card">
+    Loading match...
+  </div>
+
+  <div class="ign-box">
+    <input id="inGameName" placeholder="Enter Free Fire IGN">
+  </div>
+
+  <div id="slotBox"></div>
+
+</div>
+  
+<script>
+const client = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+const urlParams = new URLSearchParams(window.location.search);
+const matchId = Number(urlParams.get("id"));
+
+console.log("MATCH ID:", matchId);
+
+let currentMatch = null;
+
+/* LOAD MATCH */
+async function loadMatch(){
+
+  const matchBox = document.getElementById("matchInfo");
+
+  if(!matchId){
+    matchBox.innerHTML = "❌ Match ID missing";
+    return;
+  }
+
+  const { data:m, error } = await client
+    .from("matches")
+    .select("*")
+    .eq("id", matchId)
+    .maybeSingle();
+
+  console.log("MATCH DATA:", m);
+  console.log("MATCH ERROR:", error);
+
+  if(error || !m){
+    matchBox.innerHTML = "❌ Match not found";
+    return;
+  }
+
+  currentMatch = m;
+
+  matchBox.innerHTML = `
+    <h2>${m.title || "Match"}</h2>
+    <p>🏆 Prize Pool: ₹${m.prize_pool || 0}</p>
+    <p>💰 Entry Fee: ₹${m.entry_fee || 0}</p>
+    <p>👥 Total Slots: ${m.total_slots || 0}</p>
+    <p>🎮 ${m.game_mode || m.tournament_type || ""}</p>
+  `;
+
+  generateSlots(Number(m.total_slots || 0));
+  await loadBooked();
+}
+
+/* GENERATE SLOT UI */
+function generateSlots(total){
+
+  const box = document.getElementById("slotBox");
+
+  box.innerHTML = "";
+
+  for(let i = 1; i <= total; i++){
+
+    const teamNo = Math.ceil(i / 4);
+
+    const div = document.createElement("div");
+
+    div.className = "slot";
+    div.id = `slot-${i}`;
+
+    div.innerHTML =` 
+      <div class="slot-left">
+
+        <div class="slot-no">
+          Slot ${i}
+        </div>
+
+        <div class="team">
+          Team ${teamNo}
+        </div>
+
+      </div>
+
+      <button class="select-btn"
+        onclick="bookSlot(${i}, ${teamNo})">
+        SELECT
+      </button>
+    `;
+
+    box.appendChild(div);
+  }
+}
+
+/* LOAD BOOKED SLOTS */
+async function loadBooked(){
+
+  const { data, error } = await client
+    .from("match_players")
+    .select("*")
+    .eq("match_id", matchId);
+
+  console.log("BOOKED:", data);
+  console.log("BOOKED ERROR:", error);
+
+  if(error || !data) return;
+
+  data.forEach(player => {
+
+    const slot = document.getElementById(`slot-${player.slot_no}`);
+
+    if(slot){
+
+      slot.classList.add("booked");
+
+      slot.innerHTML = `
+        <div class="slot-left">
+          <div class="slot-no">Slot ${player.slot_no}</div>
+          <div class="team">Team ${player.team_no}</div>
+          <div class="ign">🎮 ${player.ingame_name || "Player"}</div>
+        </div>
+
+        <div class="booked-text">BOOKED</div>
+      `;
+    }
+  });
+}
+
+/* BOOK SLOT */
+function bookSlot(slotNo, teamNo){
+
+  const ignInput = document.getElementById("inGameName");
+
+  if(!ignInput){
+    alert("IGN input not found");
+    return;
+  }
+
+  const inGameName = ignInput.value.trim();
+
+  if(!inGameName){
+    alert("Enter Free Fire IGN");
+    return;
+  }
+
+  window.location.href =
+    `payment.html?match=${matchId}&slot=${slotNo}&team=${teamNo}&ign=${encodeURIComponent(inGameName)}`;
+}
+
+/* REALTIME */
+client
+  .channel("live-slots")
+  .on(
+    "postgres_changes",
+    {
+      event:"*",
+      schema:"public",
+      table:"match_players"
+    },
+    () => {
+      loadBooked();
+    }
+  )
+  .subscribe();
+
+/* START */
+loadMatch();
+</script>
+
+</body>
+</html>

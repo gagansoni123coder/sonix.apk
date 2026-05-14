@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoniX Match History</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
+
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,#3b0000,#050505 55%,#000);
+  color:#fff;
+  padding:18px;
+}
+
+h1{
+  text-align:center;
+  color:#ff3b3b;
+  text-shadow:0 0 18px red;
+  margin-bottom:25px;
+}
+
+.history-card{
+  background:linear-gradient(145deg,#160000,#111);
+  border:1px solid rgba(255,0,0,.45);
+  border-radius:22px;
+  padding:18px;
+  margin-bottom:18px;
+  box-shadow:0 0 25px rgba(255,0,0,.3);
+}
+
+.history-card h2{
+  color:#ff4d4d;
+  margin-bottom:10px;
+}
+
+.history-card p{
+  color:#ddd;
+  margin:8px 0;
+}
+
+.time{
+  color:#aaa;
+  font-size:13px;
+  margin-top:10px;
+}
+
+.btn{
+  width:100%;
+  margin-top:15px;
+  padding:13px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(45deg,#ff0000,#ff4d4d);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 0 18px rgba(255,0,0,.55);
+}
+
+.empty{
+  text-align:center;
+  margin-top:80px;
+  color:#ff7777;
+  font-weight:800;
+}
+  .tabs{
+  display:flex;
+  background:#120000;
+  border:1px solid rgba(255,0,0,.4);
+  border-radius:18px;
+  padding:6px;
+  margin-bottom:22px;
+  box-shadow:0 0 18px rgba(255,0,0,.25);
+}
+
+.tab{
+  flex:1;
+  padding:13px;
+  border:none;
+  border-radius:14px;
+  background:transparent;
+  color:#ff8a8a;
+  font-weight:900;
+}
+
+.tab.active{
+  background:linear-gradient(45deg,#ff0000,#ff4d4d);
+  color:#fff;
+  box-shadow:0 0 18px red;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎮 Match History</h1>
+
+  <div class="tabs">
+  <button class="tab active" onclick="setTab('ongoing', this)">ONGOING</button>
+  <button class="tab" onclick="setTab('completed', this)">COMPLETED</button>
+</div>
+  
+<div id="historyBox">
+  <div class="empty">Loading history...</div>
+  
+</div>
+
+<script>
+const client = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+let allHistory = [];
+let currentTab = "ongoing";
+
+function setTab(tab, btn){
+  currentTab = tab;
+
+  document.querySelectorAll(".tab").forEach(b=>{
+    b.classList.remove("active");
+  });
+
+  btn.classList.add("active");
+
+  renderHistory();
+}
+
+async function loadHistory(){
+
+  const box = document.getElementById("historyBox");
+
+  const { data:{ user } } = await client.auth.getUser();
+
+  if(!user){
+    location.href = "login.html";
+    return;
+  }
+
+  const { data, error } = await client
+    .from("match_history")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending:false });
+
+  if(error){
+    box.innerHTML = `<div class="empty">History load failed ❌</div>`;
+    return;
+  }
+
+  allHistory = data || [];
+  renderHistory();
+}
+
+async function renderHistory(){
+
+  const box = document.getElementById("historyBox");
+
+  const filtered = allHistory.filter(item=>{
+    return currentTab === "completed"
+      ? item.status === "completed"
+      : item.status !== "completed";
+  });
+
+  if(filtered.length === 0){
+    box.innerHTML = `<div class="empty">No ${currentTab} matches found 📭</div>`;
+    return;
+  }
+
+  let html = "";
+
+  filtered.forEach(item=>{
+    html += `
+      <div class="history-card">
+        <h2>${item.title || "🎮 Tournament Joined"}</h2>
+        <p>${item.message || "You have joined this match successfully."}</p>
+
+        <div class="time">
+          ${new Date(item.created_at).toLocaleString()}
+        </div>
+
+        ${
+          item.button_link
+          ? `<button class="btn" onclick="window.location.href='${item.button_link}'">
+              🔥 Check Details
+            </button>`
+          : ""
+        }
+      </div>
+    `;
+  });
+
+  box.innerHTML = html;
+}
+
+loadHistory();
+</script>
+
+</body>
+</html>

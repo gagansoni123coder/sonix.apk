@@ -1,0 +1,40 @@
+body {
+  background: #0f0020;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+}
+
+.card {
+  background: #1a0033;
+  padding: 20px;
+  margin: 50px auto;
+  width: 300px;
+  border-radius: 15px;
+  box-shadow: 0 0 15px cyan;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: none;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button:first-of-type {
+  background: #00ff99;
+}
+
+button:last-of-type {
+  background: #ff4d4d;
+}

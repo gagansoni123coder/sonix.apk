@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Match Payment</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  padding:0;
+  background:#070707;
+  font-family:Arial,sans-serif;
+  color:white;
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  width:500px;
+  height:500px;
+  background:red;
+  filter:blur(180px);
+  opacity:.18;
+  top:-180px;
+  left:-180px;
+  z-index:-1;
+}
+
+.card{
+  width:350px;
+  background:#111;
+  border:1px solid rgba(255,0,0,.4);
+  border-radius:20px;
+  padding:25px;
+  box-shadow:0 0 30px rgba(255,0,0,.3);
+}
+
+.title{
+  font-size:28px;
+  font-weight:bold;
+  color:#ff3c3c;
+  margin-bottom:20px;
+  text-align:center;
+  text-shadow:0 0 15px red;
+}
+
+.info{
+  background:#1a1a1a;
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:20px;
+  border:1px solid rgba(255,0,0,.25);
+}
+
+.info p{
+  margin:10px 0;
+  font-size:15px;
+  color:#ddd;
+}
+
+.pay-btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(45deg,#ff0000,#ff4d4d);
+  color:white;
+  font-size:17px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 0 20px rgba(255,0,0,.45);
+}
+
+.loading{
+  opacity:.7;
+  pointer-events:none;
+}
+
+.status{
+  margin-top:15px;
+  text-align:center;
+  color:#ff8b8b;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div class="title">💰 MATCH PAYMENT</div>
+
+  <div id="paymentBox" class="info">
+    Loading payment...
+  </div>
+
+  <button class="pay-btn" id="payBtn" onclick="payNow()">
+    PAY NOW
+  </button>
+
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const client = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+const params = new URLSearchParams(window.location.search);
+
+const matchId = params.get("match");
+const slotNo = params.get("slot");
+const teamNo = params.get("team") || "0";
+const ign = params.get("ign") || "Not entered";
+
+let currentMatch = null;
+let currentUser = null;
+
+async function loadMatch(){
+
+  const box = document.getElementById("paymentBox");
+
+  if(!matchId || !slotNo){
+    box.innerHTML = "Match ya slot missing ❌";
+    return;
+  }
+
+  const { data:{ user } } = await client.auth.getUser();
+
+  if(!user){
+    location.href = "login.html";
+    return;
+  }
+
+  currentUser = user;
+
+  const { data:match, error:matchError } = await client
+    .from("matches")
+    .select("*")
+    .eq("id", Number(matchId))
+    .maybeSingle();
+
+  if(matchError || !match){
+    console.log("MATCH ERROR:", matchError);
+    box.innerHTML = "Match not found ❌";
+    return;
+  }
+
+  currentMatch = match;
+
+  box.innerHTML = `
+    <p>🎮 Match: <b>${match.title || "Match"}</b></p>
+    <p>🎯 Slot: <b>${slotNo}</b></p>
+    <p>👥 Team: <b>${teamNo}</b></p>
+    <p>🪪 IGN: <b>${ign}</b></p>
+    <p>💰 Entry Fee: <b>🪙 ${match.entry_fee || 0}</b></p>
+  `;
+}
+
+async function payNow(){
+
+  const payBtn = document.getElementById("payBtn");
+  const status = document.getElementById("status");
+
+  if(!currentMatch || !currentUser){
+    alert("Match data not loaded");
+    return;
+  }
+
+  payBtn.classList.add("loading");
+  payBtn.innerText = "PROCESSING...";
+  status.innerText = "Checking slot...";
+
+  const { data:existing } = await client
+    .from("match_players")
+    .select("id")
+    .eq("match_id", Number(matchId))
+    .eq("slot_no", Number(slotNo))
+    .maybeSingle();
+
+  if(existing){
+    alert("Slot already booked ❌");
+    resetButton();
+    return;
+  }
+
+  status.innerText = "Checking balance...";
+
+  const { data:userData, error:userError } = await client
+    .from("users")
+    .select("coins")
+    .eq("id", currentUser.id)
+    .maybeSingle();
+
+  if(userError || !userData){
+    alert("User not found ❌");
+    resetButton();
+    return;
+  }
+
+  const entryFee = Number(currentMatch.entry_fee || 0);
+  const coins = Number(userData.coins || 0);
+
+  if(coins < entryFee){
+    alert("Not enough coins ❌");
+    resetButton();
+    return;
+  }
+
+  const newCoins = coins - entryFee;
+
+  const { error:updateError } = await client
+    .from("users")
+    .update({ coins:newCoins })
+    .eq("id", currentUser.id);
+
+  if(updateError){
+    alert(updateError.message);
+    resetButton();
+    return;
+  }
+
+  status.innerText = "Joining match...";
+
+  const { error:joinError } = await client
+    .from("match_players")
+    .insert([{
+      match_id: Number(matchId),
+      user_id: currentUser.id,
+      team_no: Number(teamNo),
+      slot_no: Number(slotNo),
+      ingame_name: ign,
+      joined_at: new Date().toISOString()
+    }]);
+
+  if(joinError){
+    alert(joinError.message);
+    resetButton();
+    return;
+  }
+
+  await client
+    .from("transactions")
+    .insert([{
+      user_id: currentUser.id,
+      type: "match_join",
+      title: `Joined ${currentMatch.title || "Tournament"}`,
+      amount: -entryFee,
+      status: "success",
+      match_id: String(matchId)
+    }]);
+
+  const detailsLink =
+  `roomdetails.html?match=${matchId}&slot=${slotNo}&team=${teamNo}&ign=${encodeURIComponent(ign)}`;
+
+  await client
+    .from("notifications")
+    .insert([{
+      uid: currentUser.id,
+      type: "match_join",
+      title: "🎮 Tournament Joined Successfully",
+      message: "You have successfully joined the tournament for check the room details open your match history from profile.",
+      is_read: false
+    }]);
+
+  await client.from("match_history")
+  .insert([{
+  user_id: currentUser.id,
+  match_id: Number(matchId),
+  slot_no: Number(slotNo),
+  team_no: Number(teamNo),
+  ingame_name: ign,
+  title: currentMatch.title || "Tournament",
+  status: "ongoing",
+  button_link: detailsLink
+  created_at: new Date().toISOString()
+}]);
+
+  await client
+    .from("matches")
+    .update({
+      filled_slots:Number(currentMatch.filled_slots || 0) + 1
+    })
+    .eq("id", Number(matchId));
+
+  status.innerText = "Payment successful 🔥";
+  payBtn.innerText = "SUCCESS ✅";
+
+  setTimeout(()=>{
+    window.location.href = detailsLink;
+  },1200);
+}
+
+function resetButton(){
+  const payBtn = document.getElementById("payBtn");
+  const status = document.getElementById("status");
+
+  payBtn.classList.remove("loading");
+  payBtn.innerText = "PAY NOW";
+  status.innerText = "";
+}
+
+loadMatch();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Room Details</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+margin:0;
+background:#070707;
+font-family:Arial;
+color:white;
+}
+
+/* BG GLOW */
+
+body::before{
+content:"";
+position:fixed;
+width:500px;
+height:500px;
+background:red;
+filter:blur(180px);
+opacity:0.15;
+top:-180px;
+left:-180px;
+z-index:-1;
+}
+
+/* CONTAINER */
+
+.container{
+max-width:1000px;
+margin:auto;
+padding:20px;
+}
+
+/* CARD */
+
+.card{
+background:#111;
+border:1px solid rgba(255,0,0,0.35);
+border-radius:20px;
+overflow:hidden;
+box-shadow:0 0 25px rgba(255,0,0,0.2);
+margin-bottom:20px;
+}
+
+/* BANNER */
+
+.banner{
+width:100%;
+height:240px;
+object-fit:cover;
+display:block;
+}
+
+/* CONTENT */
+
+.content{
+padding:20px;
+}
+
+.title{
+font-size:30px;
+font-weight:bold;
+color:#ff4d4d;
+margin-bottom:10px;
+text-shadow:0 0 12px red;
+}
+
+.tags{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:20px;
+}
+
+.tag{
+padding:8px 14px;
+border-radius:12px;
+background:#1a1a1a;
+border:1px solid rgba(255,0,0,0.4);
+color:#ff8b8b;
+font-size:14px;
+}
+
+/* GRID */
+
+.grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:14px;
+margin-top:15px;
+}
+
+.box{
+background:#1a1a1a;
+padding:14px;
+border-radius:14px;
+border:1px solid rgba(255,0,0,0.25);
+}
+
+.box small{
+color:#999;
+display:block;
+margin-bottom:5px;
+}
+
+.box h3{
+margin:0;
+color:white;
+}
+
+/* ROOM */
+
+.room-box{
+margin-top:20px;
+background:#1a1a1a;
+padding:18px;
+border-radius:16px;
+border:1px solid rgba(255,0,0,0.3);
+}
+
+.room-box h2{
+margin-top:0;
+color:#ff4d4d;
+}
+
+.room-id,
+.room-pass{
+font-size:22px;
+font-weight:bold;
+margin-top:10px;
+}
+
+/* PLAYERS */
+
+.players{
+margin-top:20px;
+}
+
+.player{
+background:#1a1a1a;
+padding:12px;
+border-radius:12px;
+margin-bottom:10px;
+display:flex;
+justify-content:space-between;
+border:1px solid rgba(255,0,0,0.2);
+}
+
+.player span{
+color:#ff8b8b;
+}
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+.grid{
+grid-template-columns:1fr;
+}
+
+.banner{
+height:180px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<img id="banner"
+class="banner">
+
+<div class="content">
+
+<div id="title"
+class="title">
+Loading...
+</div>
+
+<div class="tags">
+
+<div class="tag"
+id="type"></div>
+
+<div class="tag"
+id="mode"></div>
+
+<div class="tag"
+id="team"></div>
+
+</div>
+
+<div class="grid">
+
+<div class="box">
+<small>Entry Fee</small>
+<h3 id="entry"></h3>
+</div>
+
+<div class="box">
+<small>Prize Pool</small>
+<h3 id="prize"></h3>
+</div>
+
+<div class="box">
+<small>Match Time</small>
+<h3 id="matchTime"></h3>
+</div>
+
+<div class="box">
+<small>Map</small>
+<h3 id="map"></h3>
+</div>
+
+</div>
+
+<div class="room-box">
+
+<h2>🎮 ROOM DETAILS</h2>
+
+<div class="room-id"
+id="roomId">
+Waiting...
+</div>
+
+<div class="room-pass"
+id="roomPass">
+Waiting...
+</div>
+
+</div>
+
+<div class="room-box">
+
+<h2>📜 RULES</h2>
+
+<p id="rules"></p>
+
+</div>
+
+<div class="players">
+
+<h2>🔥 JOINED PLAYERS</h2>
+
+<div id="playerList"></div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* SUPABASE */
+
+const client =
+window.supabase.createClient(
+"https://ggkqsfkxmmusrmczoyuk.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+/* URL */
+
+const params = new URLSearchParams(window.location.search);
+
+const matchId = Number(params.get("match"));
+  
+/* LOAD MATCH */
+
+async function loadRoomDetails(){
+const { data, error } = await client
+  .from("matches")
+  .select("*")
+  .eq("id", matchId)
+  .maybeSingle();
+
+if(error || !data){
+  console.log("ROOM MATCH ERROR:", error);
+  alert("Match not found ❌");
+  return;
+}
+
+  const matchDate =
+new Date(data.match_time).toLocaleString("en-IN",{
+  day:"2-digit",
+  month:"short",
+  year:"numeric",
+  hour:"2-digit",
+  minute:"2-digit"
+});
+
+/* SET DATA */
+
+document.getElementById("banner").src =
+data.banner;
+
+document.getElementById("title").innerText =
+data.title;
+
+document.getElementById("type").innerText =
+data.tournament_type;
+
+document.getElementById("mode").innerText =
+data.game_mode;
+
+document.getElementById("team").innerText =
+data.team_type;
+
+document.getElementById("entry").innerText =
+"₹"+data.entry_fee;
+
+document.getElementById("prize").innerText =
+"₹"+data.prize_pool;
+  
+document.getElementById("matchTime").innerText =
+matchDate;
+
+document.getElementById("map").innerText =
+data.map || "BERMUDA";
+
+document.getElementById("rules").innerText =
+data.rules || "No rules";
+
+document.getElementById("roomId").innerText =
+"ROOM ID: " +
+(data.room_id || "Not Released");
+
+document.getElementById("roomPass").innerText =
+"PASSWORD: " +
+(data.room_password || "Not Released");
+
+}
+
+/* PLAYERS */
+
+async function loadPlayers(){
+
+const { data } =
+await client
+.from("match_players")
+.select("*")
+.eq("match_id",matchId);
+
+const box =
+document.getElementById("playerList");
+
+box.innerHTML = "";
+
+data.forEach(p=>{
+
+const div =
+document.createElement("div");
+
+div.className = "player";
+
+div.innerHTML = `
+
+<div>
+
+<b>${p.ingame_name}</b>
+
+</div>
+
+<span>
+Slot ${p.slot_no}
+</span>
+
+`;
+
+box.appendChild(div);
+
+});
+
+}
+
+/* REALTIME */
+
+client
+.channel("live-room")
+.on(
+"postgres_changes",
+{
+event:"*",
+schema:"public",
+table:"matches"
+},
+()=>{
+
+loadMatch();
+
+}
+)
+.on(
+"postgres_changes",
+{
+event:"*",
+schema:"public",
+table:"match_players"
+},
+()=>{
+
+loadPlayers();
+
+}
+)
+.subscribe();
+
+/* START */
+
+loadRoomDetails();
+loadPlayers();
+
+</script>
+
+</body>
+</html>

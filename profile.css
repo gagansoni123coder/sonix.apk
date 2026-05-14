@@ -1,0 +1,90 @@
+body {
+  margin: 0;
+  background: black;
+  font-family: Arial;
+  color: white;
+}
+
+/* 🔥 PROFILE CARD */
+.profile-card {
+  margin: 15px;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+
+  border: 2px solid red;
+  box-shadow: 0 0 20px red;
+}
+
+.profile-card h2 {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.coins-box {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+
+  background: #111;
+  border: 1px solid red;
+  font-weight: bold;
+}
+
+/* 🔥 MENU */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 8px;
+}
+
+/* 🔥 IMAGE BUTTON */
+.menu-item {
+  position: relative;
+  width: 100%;
+  height: 90px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+
+  box-shadow: 0 0 15px rgba(255,0,0,0.5);
+  transition: 0.3s;
+}
+
+.menu-item:hover {
+  transform: scale(1.03);
+}
+
+/* IMAGE FULL */
+.menu-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background:linear-gradient(black,black);
+  padding:5px;
+}
+
+/* TEXT OVERLAY */
+.overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 10px;
+
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  text-align: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* 🔙 BACK BUTTON */
+.back-btn {
+  margin: 20px;
+  padding: 12px;
+  text-align: center;
+  background: red;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}

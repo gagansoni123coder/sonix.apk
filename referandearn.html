@@ -1,0 +1,264 @@
+<!DOCTYPE html><html>
+<head>
+  <title>Refer & Earn</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+     </script> 
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:sans-serif;
+    }
+
+    body{
+      background:#050505;
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      color:#fff;
+      overflow:hidden;
+    }
+
+    /* 🔥 Glow Background */
+    body::before{
+      content:"";
+      position:absolute;
+      width:500px;
+      height:500px;
+      background:radial-gradient(circle,#ff0000,transparent);
+      filter:blur(120px);
+      opacity:0.5;
+      animation:move 6s infinite alternate;
+    }
+
+    @keyframes move{
+      0%{transform:translate(-150px,-150px);}
+      100%{transform:translate(150px,150px);}
+    }
+
+    /* 🎮 CARD */
+    .card{
+      width:90%;
+      max-width:340px;
+      padding:25px;
+      border-radius:20px;
+      background:#111;
+      box-shadow:0 0 25px rgba(255,0,0,0.4);
+      text-align:center;
+      z-index:2;
+    }
+
+    .card h2{
+      margin-bottom:15px;
+    }
+
+    /* UID */
+    .uid{
+      font-size:30px;
+      margin:15px 0;
+      color:#ff3b3b;
+      letter-spacing:3px;
+      font-weight:bold;
+    }
+
+    /* BUTTON */
+    button{
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      border:none;
+      border-radius:10px;
+      background:linear-gradient(45deg,#ff0000,#ff4d4d);
+      color:#fff;
+      cursor:pointer;
+      font-size:15px;
+      box-shadow:0 0 10px rgba(255,0,0,0.5);
+    }
+
+    /* LINK */
+    .link-box{
+      margin-top:10px;
+      font-size:12px;
+      color:#aaa;
+      word-break:break-all;
+    }
+
+    #count{
+      margin-top:10px;
+      color:#ccc;
+    }
+
+    /* 🏆 LEADERBOARD */
+    .leaderboard{
+      position:fixed;
+      left:-260px;
+      top:0;
+      width:260px;
+      height:100%;
+      background:#111;
+      padding:15px;
+      transition:0.3s;
+      overflow:auto;
+      box-shadow:5px 0 20px rgba(255,0,0,0.5);
+      z-index:5;
+    }
+
+    .leaderboard.active{
+      left:0;
+    }
+
+    .lb-item{
+      background:#1a1a1a;
+      padding:10px;
+      margin:8px 0;
+      border-radius:10px;
+      display:flex;
+      justify-content:space-between;
+    }
+
+    /* OPEN BUTTON */
+    .open-btn{
+      position:fixed;
+      left:10px;
+      top:50%;
+      transform:translateY(-50%);
+      background:red;
+      border:none;
+      color:#fff;
+      padding:12px;
+      border-radius:50%;
+      font-size:18px;
+      cursor:pointer;
+      z-index:6;
+      box-shadow:0 0 15px red;
+    }
+
+  </style></head><body><!-- 🏆 LEADERBOARD --><div id="board" class="leaderboard">
+  <h3>🏆 Top Referrals</h3>
+  <div id="lb"></div>
+</div><button class="open-btn" onclick="toggleBoard()">🏆</button>
+
+<!-- 🎮 CARD --><div class="card">  <h2>Refer & Earn</h2>  <div class="uid" id="uid">Loading...</div><button onclick="copyUID()">Copy Code</button>
+<button onclick="shareLink()">Share</button>
+
+  <div id="link" class="link-box"></div>
+  <p id="count"></p></div><script>
+
+const client = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+/* LOAD USER */
+async function loadUser(){
+
+  const { data:{ user } } = await client.auth.getUser();
+
+  if(!user){
+    location.href="login.html";
+    return;
+  }
+
+  const { data } = await client
+  .from("users")
+  .select("uid")
+  .eq("id", user.id)
+  .single();
+
+  const uid = data.uid;
+
+  /* SHORT UID (clean look) */
+  const shortUID = uid.length > 10 ? uid.slice(0,6).toUpperCase() : uid;
+
+  document.getElementById("uid").innerText = shortUID;
+
+  const link = location.origin + "/register.html?ref=" + uid;
+
+  document.getElementById("link").innerText = link;
+
+  loadCount(uid);
+}
+
+/* COPY */
+function copyUID(){
+  const t = document.getElementById("uid").innerText;
+  navigator.clipboard.writeText(t);
+  alert("Copied ✅");
+}
+
+/* SHARE */
+function shareLink(){
+  const link = document.getElementById("link").innerText;
+if(navigator.share){
+    navigator.share({
+      title:"Join SoniX Esports",
+      text:"Use my referral code 🔥",
+      url:link
+    });
+  }else{
+    copyUID();
+  }
+}
+
+/* COUNT */
+async function loadCount(uid){
+
+  const { count } = await client
+  .from("users")
+  .select("*",{count:"exact",head:true})
+  .eq("referred_by", uid);
+
+  document.getElementById("count").innerText =
+  "Referrals: " + (count || 0);
+}
+
+/* LEADERBOARD */
+async function loadLeaderboard(){
+
+  const { data } = await client
+  .from("users")
+  .select("referred_by");
+
+  const map = {};
+
+  data.forEach(u=>{
+    if(u.referred_by){
+      map[u.referred_by] =
+      (map[u.referred_by]||0)+1;
+    }
+  });
+
+  const sorted = Object.entries(map)
+  .sort((a,b)=>b[1]-a[1])
+  .slice(0,10);
+
+  let html="";
+
+  sorted.forEach((x,i)=>{
+    html+=`
+    <div class="lb-item">
+      <span>#${i+1} ${x[0]}</span>
+      <span>${x[1]}</span>
+    </div>`;
+  });
+
+  document.getElementById("lb").innerHTML =
+  html || "No data";
+}
+
+/* TOGGLE */
+function toggleBoard(){
+  document.getElementById("board")
+  .classList.toggle("active");
+}
+
+/* INIT */
+loadUser();
+loadLeaderboard();
+
+</script>
+</body>
+</html>

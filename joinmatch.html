@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Join Match</title>
+
+  <link rel="stylesheet" href="joinmatch.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="topbar">
+
+  <button class="back-btn" onclick="history.back()">
+    ←
+  </button>
+
+  <h1>JOIN MATCH</h1>
+
+  <div class="coins-box">
+    🪙 <span id="coins">0</span>
+  </div>
+
+</div>
+
+<div class="main-card">
+
+  <div class="match-info">
+
+    <h2 id="matchTitle">Loading...</h2>
+
+    <div class="slot-info">
+      <span id="teamText">TEAM</span>
+      <span id="slotText">SLOT</span>
+    </div>
+
+  </div>
+
+  <div class="input-box">
+
+    <label>🎮 ENTER INGAME NAME</label>
+
+    <input
+      type="text"
+      id="ingame"
+      placeholder="Enter your game name"
+    >
+
+  </div>
+
+  <div class="price-card">
+
+    <div class="price-row">
+      <span>ENTRY FEE</span>
+      <strong id="entryFee">🪙 0</strong>
+    </div>
+
+    <div class="price-row">
+      <span>YOUR BALANCE</span>
+      <strong id="balance">🪙 0</strong>
+    </div>
+
+  </div>
+
+  <button class="join-btn" onclick="joinMatch()">
+    🔥 JOIN NOW
+  </button>
+
+</div>
+
+<script>
+
+const supabase = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+const params = new URLSearchParams(window.location.search);
+
+const matchId = params.get("id");
+const teamNo = params.get("team");
+const slotNo = params.get("slot");
+
+let currentUser = null;
+let currentMatch = null;
+let currentCoins = 0;
+
+document.getElementById("teamText").innerText =
+  "TEAM " + teamNo;
+
+document.getElementById("slotText").innerText =
+  "SLOT " + slotNo;
+
+// LOAD USER
+
+async function loadUser(){
+
+  const {
+    data:{ user }
+  } = await supabase.auth.getUser();
+
+  if(!user){
+
+    window.location.href =
+      "user-login.html";
+
+    return;
+  }
+
+  currentUser = user;
+
+  const { data } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  currentCoins = data.coins;
+
+  document.getElementById("coins").innerText =
+    currentCoins;
+
+  document.getElementById("balance").innerText =
+    "🪙 " + currentCoins;
+
+}
+
+// LOAD MATCH
+
+async function loadMatch(){
+
+  const { data } = await supabase
+    .from("matches")
+    .select("*")
+    .eq("id", matchId)
+    .single();
+
+  currentMatch = data;
+
+  document.getElementById("matchTitle")
+    .innerText = data.title;
+
+  document.getElementById("entryFee")
+    .innerText = "🪙 " + data.entry_fee;
+
+}
+
+// JOIN MATCH
+
+async function joinMatch(){
+
+  const ingame =
+    document.getElementById("ingame").value;
+
+  if(!ingame){
+
+    alert("Enter ingame name");
+
+    return;
+  }
+
+  if(currentCoins < currentMatch.entry_fee){
+
+    alert("Not enough coins");
+
+    return;
+  }
+
+  // CHECK SLOT TAKEN
+
+  const { data: slotCheck } = await supabase
+    .from("match_players")
+    .select("*")
+    .eq("match_id", matchId)
+    .eq("team_no", teamNo)
+    .eq("slot_no", slotNo);
+
+  if(slotCheck.length > 0){
+
+    alert("Slot already taken");
+
+    return;
+  }
+
+  // INSERT PLAYER
+
+  const { error: playerError } = await supabase
+    .from("match_players")
+    .insert([{
+
+      match_id: matchId,
+      user_id: currentUser.id,
+      team_no: teamNo,
+      slot_no: slotNo,
+      ingame_name: ingame
+
+    }]);
+
+  if(playerError){
+
+    alert(playerError.message);
+
+    return;
+  }
+
+  // DEDUCT COINS
+
+  const updatedCoins =
+    currentCoins - currentMatch.entry_fee;
+
+  await supabase
+    .from("users")
+    .update({
+      coins: updatedCoins
+    })
+    .eq("id", currentUser.id);
+
+  // TRANSACTION
+
+  await supabase
+    .from("transactions")
+    .insert([{
+
+      user_id: currentUser.id,
+      amount: currentMatch.entry_fee,
+      type: "match_join",
+      match_id: matchId
+
+    }]);
+
+  // UPDATE SLOTS
+
+  await supabase
+    .from("matches")
+    .update({
+      filled_slots:
+      currentMatch.filled_slots + 1
+    })
+    .eq("id", matchId);
+
+  alert("🔥 Joined Successfully");
+
+  // REDIRECT
+window.location.href =
+  `roomdetails.html?id=${matchId}`;
+
+}
+
+loadUser();
+loadMatch();
+
+</script>
+
+</body>
+</html>

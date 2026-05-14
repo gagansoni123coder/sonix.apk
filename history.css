@@ -1,0 +1,99 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg, #0f0020, #1a0033);
+  color: white;
+}
+
+/* 🔙 BACK BUTTON */
+.back-btn {
+  margin: 15px;
+  padding: 10px 15px;
+  background: #ff4d4d;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+/* TITLE */
+h1 {
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* HISTORY BOX */
+#history {
+  padding: 15px;
+}
+
+/* CARD */
+.card {
+  background: #14002b;
+  border-radius: 15px;
+  padding: 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 10px #6a00ff;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: scale(1.02);
+}
+
+/* TOP */
+.top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+/* TYPE */
+.type {
+  font-weight: bold;
+  color: cyan;
+}
+
+/* STATUS */
+.status {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+.success {
+  background: green;
+}
+
+.pending {
+  background: orange;
+}
+
+.failed {
+  background: red;
+}
+
+/* MESSAGE */
+.msg {
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+/* AMOUNT */
+.amount {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.green {
+  color: #00ff99;
+}
+
+.red {
+  color: #ff4d4d;
+}
+
+/* DATE */
+small {
+  color: #aaa;
+}

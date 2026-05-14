@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SoniX Rewards</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <link rel="stylesheet" href="rewards.css">
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="back" onclick="location.href='profile.html'">⬅</div>
+
+  <div class="title-box">
+    <img src="logo.png" class="logo">
+    <span>SoniX Rewards</span>
+  </div>
+
+  <div class="coins-box">
+    🪙 <span id="coins">0</span>
+  </div>
+</div>
+
+<!-- GRID -->
+<div class="grid">
+  <img src="daily.jpg" data-page="daily.html" class="btn-img">
+  <img src="spin.jpg" data-page="spinandwin.html" class="btn-img">
+  <img src="loot.jpg" data-page="lootbox.html" class="btn-img">
+  <img src="tasks.jpg" data-page="tasks.html" class="btn-img">
+</div>
+
+<audio id="clickSound" src="click.mp3"></audio>
+
+<script>
+
+// ✅ SAFE SUPABASE (no duplicate error ever)
+if(!window.sb){
+  window.sb = window.supabase.createClient(
+    "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+  );
+}
+const supabase = window.sb;
+
+// USER
+const USER_ID = 1;
+
+// LOAD COINS
+async function loadCoins(){
+  try{
+    const { data } = await supabase
+      .from("users")
+      .select("coins")
+      .eq("id", USER_ID)
+      .single();
+
+    document.getElementById("coins").innerText = data?.coins || 0;
+  }catch(e){
+    console.log(e);
+  }
+}
+
+// 🔥 BUTTON FIX (IMPORTANT)
+document.addEventListener("DOMContentLoaded", ()=>{
+
+  document.querySelectorAll(".btn-img").forEach(btn=>{
+
+    btn.addEventListener("click", ()=>{
+
+      console.log("clicked"); // debug
+
+      const page = btn.dataset.page;
+
+      // sound
+      let sound = document.getElementById("clickSound");
+      if(sound){
+        sound.currentTime = 0;
+        sound.play().catch(()=>{});
+      }
+
+      // redirect
+      setTimeout(()=>{
+        window.location.href = page;
+      },100);
+
+    });
+
+  });
+
+});
+
+// INIT
+loadCoins();
+
+</script>
+
+</body>
+</html>

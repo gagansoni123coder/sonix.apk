@@ -1,0 +1,163 @@
+/* ===== BODY ===== */
+
+body{
+
+  margin:0;
+  padding:18px;
+
+  background:
+  radial-gradient(circle at top,
+  #24003a 0%,
+  #0a0018 45%,
+  #050816 100%);
+
+  font-family:Arial,sans-serif;
+
+  min-height:100vh;
+
+  overflow-x:hidden;
+
+}
+
+/* ===== GRID ===== */
+
+.menu-grid{
+
+  display:grid;
+
+  grid-template-columns:
+  repeat(2,1fr);
+
+  gap:16px;
+
+  max-width:420px;
+
+  margin:auto;
+
+}
+
+/* ===== MENU BUTTON ===== */
+
+.menu-btn{
+
+  position:relative;
+
+  display:block;
+
+  overflow:hidden;
+
+  border-radius:22px;
+
+  padding:4px;
+
+  text-decoration:none;
+
+  background:
+  linear-gradient(
+    135deg,
+    #ff0080,
+    #7b00ff,
+    #00d9ff
+  );
+
+  transition:0.35s;
+
+  box-shadow:
+
+  0 0 12px #ff0080,
+
+  0 0 28px rgba(255,0,140,0.55),
+
+  0 0 50px rgba(123,0,255,0.35);
+
+}
+
+/* ===== INNER ===== */
+
+.menu-btn::before{
+
+  content:"";
+
+  position:absolute;
+
+  inset:4px;
+
+  background:#0b0b15;
+
+  border-radius:18px;
+
+  z-index:1;
+
+}
+
+/* ===== IMAGE ===== */
+
+.menu-btn img{
+
+  position:relative;
+
+  z-index:2;
+
+  width:100%;
+
+  display:block;
+
+  border-radius:18px;
+
+  transition:0.35s;
+
+}
+
+/* ===== HOVER ===== */
+
+.menu-btn:hover{
+
+  transform:
+  translateY(-5px)
+  scale(1.03);
+
+  box-shadow:
+
+  0 0 20px #ff0080,
+
+  0 0 45px rgba(255,0,140,0.9),
+
+  0 0 80px rgba(123,0,255,0.55);
+
+}
+
+/* ===== IMAGE HOVER ===== */
+
+.menu-btn:hover img{
+
+  transform:scale(1.05);
+
+  filter:
+
+  brightness(1.08)
+
+  saturate(1.2);
+
+}
+
+/* ===== ACTIVE ===== */
+
+.menu-btn:active{
+
+  transform:scale(0.96);
+
+}
+
+/* ===== MOBILE ===== */
+
+@media(max-width:480px){
+
+  .menu-grid{
+
+    gap:12px;
+
+    max-width:360px;
+
+  }
+
+}

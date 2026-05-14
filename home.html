@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SoniX Esports</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="Home.css">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+
+</head>
+
+<body>
+  
+
+<!-- 🔥 PROFESSIONAL TOP HEADER -->
+<div class="top-bar">
+
+  <!-- 👋 LEFT SIDE -->
+  <div class="user-area">
+
+    <p class="welcome">
+      Welcome Back 👋
+    </p>
+
+    <p id="name"></p>
+
+  </div>
+
+  <!-- 👉 RIGHT SIDE -->
+  <div class="top-actions">
+
+    <!-- 💰 COINS -->
+    <div class="wallet-box">
+
+      💰
+      <span id="coins">
+        0
+      </span>
+
+    </div>
+
+    <!-- 🔔 NOTIFICATION -->
+    <div class="notif-wrapper">
+
+      <div
+      class="notif-btn"
+      onclick="toggleNotifications()">
+
+        🔔
+
+        <span id="notifCount">
+          1
+        </span>
+
+      </div>
+
+      <!-- 📢 DROPDOWN -->
+
+      <div
+      class="notif-dropdown"
+      id="notifDropdown">
+
+        <h3>
+          📢 Notifications
+        </h3>
+
+        <div id="notificationList">
+
+          <p class="empty-noti">
+            No notifications yet
+          </p>
+
+          ${n.button_link && n.type === "match_join" ? 
+  `<button
+    class="notif-btn"
+    onclick="window.location.href='${n.button_link}'">
+    Check Details
+  </button>
+ `: ""}
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 📢 ANNOUNCEMENT BAR -->
+
+<div class="info">
+
+  🔥 New tournaments dropping soon —
+  stay ready warriors 🎮
+
+</div>
+
+<!-- 🎮 GAME GRID -->
+
+<div class="grid">
+
+  <div
+  class="game-card"
+  onclick="goTo('fullmap.html')">
+
+    <img src="fullmap.jpg">
+
+  </div>
+
+  <div
+  class="game-card"
+  onclick="goTo('cs1v1.html')">
+
+    <img src="cs1v1.jpg">
+
+  </div>
+
+  <div
+  class="game-card"
+  onclick="goTo('lw1v1.html')">
+
+    <img src="lw1v1.jpg">
+
+  </div>
+
+  <div
+  class="game-card"
+  onclick="goTo('survival.html')">
+
+    <img src="survival.jpg">
+
+  </div>
+
+  <div
+  class="game-card"
+  onclick="goTo('cs2v2.html')">
+
+    <img src="cs2v2.jpg">
+
+  </div>
+
+  <div
+  class="game-card"
+  onclick="goTo('free.html')">
+
+    <img src="freematch.jpg">
+
+  </div>
+
+</div>
+
+<!-- 🎁 REFER -->
+
+<div class="refer"
+  onclick="goTo('referandearn.html')">
+
+  <img src="refer.jpg">
+
+</div>
+
+<!-- 🔻 PROFESSIONAL BOTTOM NAV -->
+
+<div class="bottom-nav">
+
+  <div onclick="goTo('earn.html')">
+
+    💰
+    <br>
+
+    <span>Earn</span>
+
+  </div>
+
+  <div onclick="goTo('games.html')">
+
+    🎮
+    <br>
+
+    <span>Play</span>
+
+  </div>
+
+  <div onclick="goTo('profile.html')">
+
+    👤
+    <br>
+
+    <span>Account</span>
+
+  </div>
+
+</div>
+
+<!-- ✅ SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+const supabaseClient = supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+// 🚀 INIT
+async function init(){
+
+  const { data } = await supabaseClient.auth.getSession();
+  const user = data.session?.user;
+
+  if(!user){
+    window.location.href = "login.html";
+    return;
+  }
+
+  loadUser(user.id);
+  realtimeCoins(user.id);
+}
+
+
+// 👤 LOAD USER
+async function loadUser(){
+
+const { data: { user }, error: authError } =
+await supabaseClient.auth.getUser();
+
+if(authError || !user){
+console.log("No user");
+return;
+}
+
+const { data, error } = await supabaseClient
+.from("users")
+.select("name, coins")
+.eq("id", user.id)   // ✅ UID nahi, ID use karo
+.maybeSingle();
+
+if(error){
+console.log("FETCH ERROR:", error);
+return;
+}
+
+if(!data){
+document.getElementById("name").innerText = "Player";
+document.getElementById("coins").innerText = "0";
+return;
+}
+
+document.getElementById("name").innerText =
+data.name || "Player";
+
+document.getElementById("coins").innerText =
+data.coins || 0;
+}
+
+
+// 🔴 REALTIME COINS
+function realtimeCoins(uid){
+
+  supabaseClient
+    .channel("coins-channel")
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "users"
+      },
+      payload => {
+
+        if(payload.new.uid === uid){
+          document.getElementById("coins").innerText =
+            payload.new.coins;
+        }
+
+      }
+    )
+    .subscribe();
+}
+
+
+// 🔗 NAVIGATION
+function goTo(page){
+  window.location.href = page;
+}
+
+init();
+</script>
+
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "ff8e0add-c201-4d90-bf11-b3cf8e61cc91",
+    });
+  });
+
+async function loadNotifications(){
+
+const { data:{ user } } =
+await supabaseClient.auth.getUser();
+
+if(!user){
+console.log("No user");
+return;
+}
+
+const { data, error } =
+await supabaseClient
+.from("notifications")
+.select("*")
+.eq("uid", user.id)
+.order("created_at", { ascending:false });
+
+if(error){
+console.log("LOAD ERROR:", error);
+return;
+}
+
+const box =
+document.getElementById("notificationList");
+
+/* CLEAR FIRST */
+box.innerHTML = "";
+
+/* EMPTY STATE */
+if(!data || data.length === 0){
+box.innerHTML = "<p>No notifications</p>";
+document.getElementById("notifCount").innerText = 0;
+return;
+}
+
+/* RENDER */
+data.forEach(n=>{
+
+box.innerHTML +=` 
+<div class="noti-card ${n.is_read ? "" : "unread"}">
+
+<h4>${n.title}</h4>
+<p>${n.message}</p>
+
+<small>
+${new Date(n.created_at).toLocaleString()}
+</small>
+
+</div>
+`;
+
+});
+
+/* UNREAD COUNT */
+const unread =
+data.filter(n => !n.is_read).length;
+
+document.getElementById("notifCount").innerText =
+unread;
+
+}
+
+async function toggleNotifications(){
+
+const box =
+document.getElementById("notifDropdown");
+
+if(box.style.display === "block"){
+
+box.style.display = "none";
+
+}else{
+
+box.style.display = "block";
+
+/* MARK AS READ */
+
+const { data:{ user } } =
+await supabaseClient.auth.getUser();
+
+await supabaseClient
+.from("notifications")
+.update({ is_read:true })
+.eq("uid", user.id);
+
+/* RELOAD */
+loadNotifications();
+
+}
+
+}
+  supabaseClient
+.channel("noti-live")
+.on("postgres_changes", {
+event:"INSERT",
+schema:"public",
+table:"notifications"
+}, ()=>{
+
+loadNotifications();
+
+})
+
+  async function giveWelcomeBonus(){
+
+  const { data:{ user } } = await supabaseClient.auth.getUser();
+
+  if(!user) return;
+
+  let deviceId = localStorage.getItem("sonix_device_id");
+
+  if(!deviceId){
+    deviceId = crypto.randomUUID();
+    localStorage.setItem("sonix_device_id", deviceId);
+  }
+
+  const { data:deviceClaim } = await supabaseClient
+    .from("welcome_bonus_claims")
+    .select("id")
+    .eq("device_id", deviceId)
+    .maybeSingle();
+
+  if(deviceClaim){
+    console.log("Bonus already claimed on this device");
+    return;
+  }
+
+  const { data:userClaim } = await supabaseClient
+    .from("welcome_bonus_claims")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if(userClaim){
+    console.log("User already claimed bonus");
+    return;
+  }
+
+  const bonus = 5;
+
+  const { data:userData, error:userError } = await supabaseClient
+    .from("users")
+    .select("coins")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if(userError || !userData){
+    console.log("USER ERROR:", userError);
+    return;
+  }
+
+  const newCoins = Number(userData.coins || 0) + bonus;
+
+  const { error:updateError } = await supabaseClient
+    .from("users")
+    .update({ coins:newCoins })
+    .eq("id", user.id);
+
+  if(updateError){
+    console.log("COINS ERROR:", updateError);
+    return;
+  }
+
+  const { error:claimError } = await supabaseClient
+    .from("welcome_bonus_claims")
+    .insert([{
+      user_id:user.id,
+      device_id:deviceId,
+      amount:bonus
+    }]);
+
+  if(claimError){
+    console.log("CLAIM ERROR:", claimError);
+    return;
+  }
+    await supabaseClient
+  .from("transactions")
+  .insert([{
+    user_id:user.id,
+    type:"welcome_bonus",
+    title:"🎁 Welcome Bonus",
+    amount:bonus,
+    status:"success",
+    created_at:new Date().toISOString()
+  }]);
+
+  alert("🎁 Welcome Bonus Added: 5 Coins");
+}
+  
+  loadUser();
+  giveWelcomeBonus();
+  
+</script>
+
+</body>
+</html>

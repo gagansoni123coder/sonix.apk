@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SoniX Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="dash.css">
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>SoniX Esports Admin</h1>
+</div>
+
+<!-- GRID MENU -->
+<div class="menu">
+
+  <div class="menu-btn" onclick="go('dashboard.html')">
+    <img src="dash.png">
+    <span></span>
+  </div>
+
+  <div class="menu-btn" onclick="go('deposit-request.html')">
+    <img src="dep.png">
+    <span></span>
+  </div>
+
+  <div class="menu-btn" onclick="go('withdraw-request.html')">
+    <img src="withdraws.png">
+    <span></span>
+  </div>
+
+  <div class="menu-btn" onclick="go('admin-users.html')">
+    <img src="users.png">
+    <span></span>
+  </div>
+
+  <div class="menu-btn" onclick="go('admin-coins.html')">
+    <img src="coins.png">
+    <span></span>
+  </div>
+
+  <div class="menu-btn" onclick="go('logs.html')">
+    <img src="logs.png">
+    <span></span>
+  </div>
+  
+  <div class="menu-btn" onclick="go('createroom.html')">
+    <img src="createroom.png">
+    <span></span>
+  </div>
+
+  <div class="menu-btn" onclick="go('admin-room-control.html')">
+    <img src="roomcontrol.png">
+    <span></span>
+  </div>
+
+  <div class="menu-btn" onclick="go('result-panel.html')">
+    <img src="resultpanel.png">
+    <span></span>
+  </div>
+
+</div>
+
+<script>
+const client = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+  
+function go(p){
+  location.href = p;
+}
+  async function checkAdmin(){
+
+  const {
+    data:{ user }
+  } = await client.auth.getUser();
+
+  if(!user){
+
+    window.location.href =
+    "admin-login.html";
+
+    return;
+  }
+
+  const { data } =
+  await client
+  .from("users")
+  .select("is_admin")
+  .eq("id",user.id)
+  .single();
+
+  if(!data?.is_admin){
+
+    window.location.href =
+    "admin-login.html";
+
+  }
+
+}
+
+checkAdmin();
+</script>
+</body>
+</html>

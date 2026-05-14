@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ticket History</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
+
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,#3b0000,#050505 60%,#000);
+  color:white;
+  padding:18px;
+}
+
+h1{
+  text-align:center;
+  color:#ff3b3b;
+  text-shadow:0 0 18px red;
+  margin-bottom:20px;
+}
+
+.tabs{
+  display:flex;
+  background:#120000;
+  border:1px solid rgba(255,0,0,.4);
+  border-radius:18px;
+  padding:6px;
+  margin-bottom:20px;
+}
+
+.tab{
+  flex:1;
+  padding:13px;
+  border:none;
+  border-radius:14px;
+  background:transparent;
+  color:#ff8a8a;
+  font-weight:900;
+}
+
+.tab.active{
+  background:linear-gradient(45deg,#ff0000,#ff4d4d);
+  color:white;
+  box-shadow:0 0 18px red;
+}
+
+.empty{
+  text-align:center;
+  margin-top:50px;
+  color:#ff8a8a;
+  font-weight:900;
+}
+.ticket-card{
+  background:linear-gradient(145deg,#160000,#0b0b0b);
+  border:1px solid rgba(255,0,0,.25);
+  border-radius:22px;
+  padding:16px;
+  margin-bottom:18px;
+  box-shadow:0 0 24px rgba(255,0,0,.18);
+}
+
+.ticket-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+}
+
+.left-status{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.status-dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  box-shadow:0 0 14px currentColor;
+}
+
+.status-dot.pending{
+  background:#ffb700;
+  color:#ffb700;
+}
+
+.status-dot.reviewing{
+  background:#00cfff;
+  color:#00cfff;
+}
+
+.status-dot.reviewed{
+  background:#00ff88;
+  color:#00ff88;
+}
+
+.status-dot.rejected{
+  background:#ff4444;
+  color:#ff4444;
+}
+
+.status-text{
+  font-weight:900;
+  letter-spacing:.5px;
+}
+
+.status-text.pending{color:#ffcc4d}
+.status-text.reviewing{color:#67deff}
+.status-text.reviewed{color:#67ffb0}
+.status-text.rejected{color:#ff7b7b}
+
+.ticket-id{
+  color:#ffb0b0;
+  font-weight:900;
+  font-size:14px;
+}
+
+.ticket-info{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.info-box{
+  background:#111;
+  border-radius:14px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.06);
+}
+
+.info-box small{
+  display:block;
+  color:#888;
+  margin-bottom:6px;
+}
+
+.info-box strong{
+  color:white;
+}
+
+.ticket-message{
+  background:#101010;
+  border-radius:15px;
+  padding:14px;
+  color:#ddd;
+  border:1px solid rgba(255,255,255,.05);
+  line-height:1.5;
+}
+
+.reply{
+  margin-top:14px;
+  padding:14px;
+  border-radius:15px;
+}
+
+.reply-title{
+  font-weight:900;
+  margin-bottom:8px;
+}
+
+.reviewed-box{
+  background:#001f12;
+  border:1px solid rgba(0,255,120,.25);
+  color:#75ffb5;
+}
+
+.rejected-box{
+  background:#240000;
+  border:1px solid rgba(255,0,0,.25);
+  color:#ff8b8b;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🎫 Tickets History</h1>
+
+<div id="ticketBox" class="empty">Loading...</div>
+
+<script>
+const client = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+let allTickets = [];
+
+  document.querySelectorAll(".tab").forEach(b=>{
+    b.classList.remove("active");
+  });
+
+async function loadTickets(){
+
+  const box = document.getElementById("ticketBox");
+
+  const { data:{ user } } = await client.auth.getUser();
+
+  if(!user){
+    location.href = "login.html";
+    return;
+  }
+
+  const { data, error } = await client
+    .from("support_tickets")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.log("TICKET ERROR:", error);
+    box.innerHTML = `<div class="empty">${error.message}</div>`;
+    return;
+  }
+
+  allTickets = data || [];
+
+function renderTickets(){
+
+  const box = document.getElementById("ticketBox");
+
+  if(allTickets.length === 0){
+    box.innerHTML = `
+      <div class="empty">
+        No tickets found 📭
+      </div>
+    `;
+    return;
+  }
+
+  box.innerHTML = allTickets.map(t=>`
+
+    <div class="ticket-card">
+
+      <div class="ticket-top">
+
+        <div class="left-status">
+
+          <span class="status-dot ${(t.status || "pending").toLowerCase()}"></span>
+
+          <span class="status-text ${(t.status || "pending").toLowerCase()}">
+            ${(t.status || "pending").toUpperCase()}
+          </span>
+
+        </div>
+
+        <div class="ticket-id">
+          TICKET #${t.id}
+        </div>
+
+      </div>
+
+      <div class="ticket-info">
+
+        <div class="info-box">
+          <small>Date</small>
+          <strong>
+            ${new Date(t.created_at).toLocaleString()}
+          </strong>
+        </div>
+
+        <div class="info-box">
+          <small>Category</small>
+          <strong>
+            ${t.category || "Support"}
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="ticket-message">
+        ${t.message || ""}
+      </div>
+
+      ${
+        (t.status || "").toLowerCase() === "reviewed"
+        && t.admin_reply
+        ? `
+          <div class="reply reviewed-box">
+            <div class="reply-title">✅ ADMIN REPLY</div>
+            <div>${t.admin_reply}</div>
+          </div>
+        `
+        : ""
+      }
+
+      ${
+        (t.status || "").toLowerCase() === "rejected"
+        && t.rejected_reason
+        ? `
+          <div class="reply rejected-box">
+            <div class="reply-title">❌ REJECTED REASON</div>
+            <div>${t.rejected_reason}</div>
+          </div>
+        `
+        : ""
+      }
+
+    </div>
+
+  `).join("");
+}
+  renderTickets();
+}
+
+
+loadTickets();
+</script>
+
+</body>
+</html>

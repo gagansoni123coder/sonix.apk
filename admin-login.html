@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <title>SoniX Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="admin-login.css">
+
+</head>
+<body>
+
+<div class="login-box">
+
+  <h1>SoniX Admin</h1>
+
+  <input
+  type="email"
+  id="email"
+  placeholder="Admin Email">
+
+  <input
+  type="password"
+  id="password"
+  placeholder="Password">
+
+  <button onclick="loginAdmin()">
+    LOGIN
+  </button>
+
+  <p id="msg"></p>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const client =
+window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+async function loginAdmin(){
+
+  const email =
+  document.getElementById("email").value;
+
+  const password =
+  document.getElementById("password").value;
+
+  const msg =
+  document.getElementById("msg");
+
+  // LOGIN
+
+  const { data,error } =
+  await client.auth.signInWithPassword({
+
+    email,
+    password
+
+  });
+
+  if(error){
+
+    msg.innerText =
+    error.message;
+
+    return;
+  }
+
+  const user =
+  data.user;
+
+  // CHECK ADMIN
+
+  const { data:adminData } =
+  await client
+  .from("users")
+  .select("is_admin")
+  .eq("id",user.id)
+  .single();
+
+  if(!adminData?.is_admin){
+
+    await client.auth.signOut();
+
+    msg.innerText =
+    "Access Denied";
+
+    return;
+  }
+  
+  async function logAdminLogin(){
+
+  const { data:{ user:admin } } =
+  await client.auth.getUser();
+
+  if(!admin) return;
+
+  const { data:adminData } = await client
+    .from("users")
+    .select("name")
+    .eq("id", admin.id)
+    .maybeSingle();
+
+  await client
+    .from("audit_logs")
+    .insert([{
+      admin_id: admin.id,
+      admin_name: adminData?.name || "Admin",
+      actions: "admin_login",
+      status: "success",
+      reason: "Admin logged in"
+    }]);
+}
+
+  // SUCCESS
+
+ await logAdminLogin();
+window.location.href = "dashboard.html";
+
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Deposit Admin Panel</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="transaction.js"></script>
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0a0a0a;
+color:white;
+}
+
+/* RED GLOW BACKGROUND */
+body::before{
+content:"";
+position:fixed;
+width:500px;
+height:500px;
+background:red;
+filter:blur(180px);
+opacity:0.12;
+top:-120px;
+left:-120px;
+z-index:-1;
+}
+
+/* HEADER */
+h1{
+text-align:center;
+color:#ff3b3b;
+text-shadow:0 0 20px red;
+margin:20px 0;
+}
+
+/* CONTAINER */
+#depositlist{
+display:flex;
+flex-direction:column;
+gap:18px;
+padding:20px;
+max-width:900px;
+margin:auto;
+}
+
+/* CARD */
+.card{
+background:#121212;
+border:1px solid rgba(255,0,0,0.3);
+border-radius:18px;
+padding:18px;
+box-shadow:0 0 20px rgba(255,0,0,0.15);
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-3px);
+box-shadow:0 0 30px rgba(255,0,0,0.35);
+}
+
+/* TOP */
+.top{
+display:flex;
+justify-content:space-between;
+margin-bottom:10px;
+}
+
+.status{
+padding:5px 10px;
+border-radius:10px;
+font-size:12px;
+text-transform:uppercase;
+}
+
+.pending{color:orange;}
+.approved{color:#00ff88;}
+.rejected{color:red;}
+
+/* BUTTONS */
+.actions{
+display:flex;
+gap:10px;
+margin-top:12px;
+}
+
+button{
+flex:1;
+padding:10px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-weight:bold;
+transition:0.3s;
+}
+
+.approve{
+background:linear-gradient(45deg,#00ff88,#00c96b);
+}
+
+.reject{
+background:linear-gradient(45deg,#ff3b3b,#b30000);
+color:white;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>💰 Deposit Admin Panel</h1>
+
+<div id="depositlist">Loading...</div>
+
+      <script>
+const client = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+async function loadDeposits(){
+  const container = document.getElementById("depositlist");
+
+  const { data, error } = await client
+    .from("deposits")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.log("LOAD ERROR:", error);
+    container.innerHTML = "Error loading ❌";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    container.innerHTML = "No deposits found 📭";
+    return;
+  }
+
+  let html = "";
+
+  data.forEach(d=>{
+    const status = (d.status || "").toLowerCase();
+
+    html += `
+      <div class="card">
+        <div class="top">
+          <span>👤 ${d.uid}</span>
+          <span class="status ${status}">${d.status}</span>
+        </div>
+
+        <p>💰 Amount: ₹${d.amount}</p>
+        <p>🧾 UTR: ${d.utr || "-"}</p>
+
+        ${
+          status === "pending"
+          ? `
+          <div class="actions">
+            <button class="approve" onclick="approveDeposit('${d.id}','${d.uid}',${Number(d.amount)})">
+              Approve
+            </button>
+
+            <button class="reject" onclick="rejectDeposit('${d.id}','${d.uid}',${Number(d.amount)})">
+              Reject
+            </button>
+          </div>
+          `
+          : ""
+        }
+
+        ${d.rejection_reason ? `<p class="reason">❌ ${d.rejection_reason}</p>` : ""}
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+async function approveDeposit(id, uid, amount){
+  const { data:check, error:checkError } = await client
+    .from("deposits")
+    .select("id,status,uid,amount")
+    .eq("id", id)
+    .maybeSingle();
+
+  if(checkError || !check){
+    console.log("CHECK ERROR:", checkError);
+    alert("Deposit not found ❌ ID: " + id);
+    return;
+  }
+
+  if((check.status || "").toLowerCase() !== "pending"){
+    alert("Already processed ❌");
+    return;
+  }
+
+  const { data:userData, error:userError } = await client
+    .from("users")
+    .select("id, coins")
+    .eq("id", uid)
+    .maybeSingle();
+
+  if(userError || !userData){
+    console.log("USER ERROR:", userError);
+    alert("User not found ❌");
+    return;
+  }
+
+  const userId = userData.id;
+  const newCoins = Number(userData.coins || 0) + Number(amount);
+
+  const { error:coinError } = await client
+    .from("users")
+    .update({ coins:newCoins })
+    .eq("id", userId);
+
+  if(coinError){
+    alert(coinError.message);
+    return;
+  }
+
+  const { error:depositError } = await client
+    .from("deposits")
+    .update({ status:"approved" })
+    .eq("id", id);
+
+  if(depositError){
+    alert(depositError.message);
+    return;
+  }
+
+  await addNotification(
+    userId,
+    "✅ Deposit Approved",
+    `Your deposit of ₹${amount} has been approved 🎮🔥`
+  );
+
+  await addAuditLog({
+    action:"deposit_approved",
+    targetUser:userId,
+    amount:Number(amount),
+    status:"approved",
+    reason:null
+  });
+
+  alert("✅ Deposit Approved");
+  loadDeposits();
+}
+
+async function rejectDeposit(id, uid, amount){
+  const reason = prompt("Enter reject reason");
+  if(!reason) return;
+
+  const { data:check, error:checkError } = await client
+    .from("deposits")
+    .select("id,status,uid,amount")
+    .eq("id", id)
+    .maybeSingle();
+
+  if(checkError || !check){
+    alert("Deposit not found ❌");
+    return;
+  }
+
+  if((check.status || "").toLowerCase() !== "pending"){
+    alert("Already processed ❌");
+    return;
+  }
+
+  const { data:userData, error:userError } = await client
+    .from("users")
+    .select("id")
+    .eq("id", uid)
+    .maybeSingle();
+
+  if(userError || !userData){
+    alert("User not found ❌");
+    return;
+  }
+
+  const userId = userData.id;
+
+  const { error:updateError } = await client
+    .from("deposits")
+    .update({
+      status:"rejected",
+      rejection_reason:reason
+    })
+    .eq("id", id);
+
+  if(updateError){
+    alert(updateError.message);
+    return;
+  }
+
+  await addNotification(
+    userId,
+    "❌ Deposit Rejected",
+    `Your deposit was rejected.\nReason: ${reason}`
+  );
+
+  await addAuditLog({
+    action:"deposit_rejected",
+    targetUser:userId,
+    amount:Number(amount),
+    status:"rejected",
+    reason:reason
+  });
+
+  alert("❌ Deposit Rejected");
+  loadDeposits();
+}
+
+async function addNotification(uid, title, message){
+  const { error } = await client
+    .from("notifications")
+    .insert([{
+      uid: uid,
+      title: title,
+      message: message,
+      is_read: false
+    }]);
+
+  if(error){
+    console.log("NOTIFICATION ERROR:", error);
+  }
+}
+
+async function addAuditLog({ action, targetUser, amount, status, reason }){
+  const { data:{ user:admin } } = await client.auth.getUser();
+
+  if(!admin){
+    console.log("Admin not logged in");
+    return;
+  }
+
+  const { error } = await client
+    .from("audit_logs")
+    .insert([{
+      admin_id: admin.id,
+      actions: action,
+      target_user: targetUser,
+      amount: amount,
+      status: status,
+      reason: reason
+    }]);
+
+  if(error){
+    console.log("AUDIT ERROR:", error);
+    alert("Audit log failed ❌ " + error.message);
+  }
+}
+
+client
+.channel("deposits-live")
+.on(
+  "postgres_changes",
+  {
+    event:"*",
+    schema:"public",
+    table:"deposits"
+  },
+  ()=> loadDeposits()
+)
+.subscribe();
+            
+
+loadDeposits();
+            async function checkAdmin(){
+
+  const {
+    data:{ user }
+  } = await client.auth.getUser();
+
+  if(!user){
+
+    window.location.href =
+    "admin-login.html";
+
+    return;
+  }
+
+  const { data } =
+  await client
+  .from("users")
+  .select("is_admin")
+  .eq("id",user.id)
+  .single();
+
+  if(!data?.is_admin){
+
+    window.location.href =
+    "admin-login.html";
+
+  }
+
+}
+
+checkAdmin();
+</script>
+  
+</body>
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport"
+  content="width=device-width, initial-scale=1.0" />
+
+  <title>SoniX CS 1V1</title>
+
+  <link rel="stylesheet" href="fullmap.css" />
+
+</head>
+<body>
+
+<!-- TOPBAR -->
+
+<div class="topbar">
+
+  <button
+  class="back-btn"
+  onclick="history.back()">
+
+    ←
+
+  </button>
+
+  <h1> CS 1V1</h1>
+
+  <div class="coins-box">
+
+    🪙
+    <span id="coins">0</span>
+
+  </div>
+
+</div>
+
+<!-- TABS -->
+
+<div class="tabs">
+
+  <button
+  class="tab active"
+  data-status="upcoming">
+
+    UPCOMING
+
+  </button>
+
+  <button
+  class="tab"
+  data-status="ongoing">
+
+    ONGOING
+
+  </button>
+
+  <button
+  class="tab"
+  data-status="completed">
+
+    RESULT
+
+  </button>
+
+</div>
+
+<!-- MATCH CONTAINER -->
+
+<div
+id="matchContainer"
+class="match-container">
+
+  <div class="empty-box">
+
+    🚫 Abhi tak koi room live nahi hai
+    <br>
+    Jaldi hi new tournament aayega
+
+  </div>
+
+</div>
+
+<!-- SUPABASE -->
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  
+<script>
+const client =
+window.supabase.createClient(
+
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+  console.log("Supabase Connected"); 
+
+/* CURRENT TAB */
+
+let currentStatus =
+"upcoming";
+
+/* GET USER */
+
+async function getCurrentUser(){
+
+  const {
+
+    data:{ user }
+
+  } =
+  await client.auth.getUser();
+
+  if(!user){
+
+    window.location.href =
+    "user-login.html";
+
+    return null;
+  }
+
+  return user;
+
+}
+
+/* LOAD COINS */
+
+async function loadCoins(){
+
+  const user =
+  await getCurrentUser();
+
+  if(!user) return;
+
+  const { data,error } =
+  await client
+  .from("users")
+  .select("coins")
+  .eq("id",user.id)
+  .single();
+
+  if(error){
+
+    console.log(error);
+
+    return;
+  }
+
+  if(data){
+
+    document.getElementById(
+      "coins"
+    ).innerText =
+    data.coins || 0;
+
+  }
+
+}
+
+/* LOAD MATCHES */
+
+async function loadMatches(){
+
+const container =
+document.getElementById("matchContainer");
+
+if(!container){
+console.log("matchContainer missing");
+return;
+}
+
+container.innerHTML = "";
+
+/* ================= RESULTS ================= */
+
+if(currentStatus === "completed"){
+
+const { data, error } =
+await client
+.from("match_results")
+.select("*")
+.eq("game_type","CS1V1")
+.order("created_at",{ ascending:false });
+
+if(error){
+console.log(error);
+return;
+}
+
+if(!data || data.length === 0){
+container.innerHTML = `
+<div class="empty-box">
+🏆 Game finish ho chuka hai, par end nahi hua  
+⚡ RESULTS will declared soon
+</div>`;
+return;
+}
+
+data.forEach(result=>{
+
+const card =
+document.createElement("div");
+
+card.className = "result-card";
+
+card.innerHTML =` 
+  <div class="result-top">
+    <div>
+      <h2>${result.title || "MATCH RESULT"}</h2>
+      <p>🎮 Match #${result.match_no || result.room_number || result.id}</p>
+    </div>
+
+    <button class="result-btn"
+      onclick="openResult('${result.game_type}', '${result.id}')">
+      OPEN RESULT
+    </button>
+  </div>
+`;
+
+container.appendChild(card);
+
+});
+
+return;
+}
+
+/* ================= MATCHES ================= */
+
+const { data, error } =
+await client
+.from("matches")
+.select("*")
+.eq("status", currentStatus)
+.eq("tournament_type", "CS 1V1")   // 🔥 ADDED FILTER
+.order("created_at",{ ascending:false });
+
+if(error){
+console.log(error);
+return;
+}
+
+if(!data || data.length === 0){
+container.innerHTML = `
+<div class="empty-box">
+🎮 Koi active match nahi mila  
+🔥 Agla battle jaldi hi unlock hoga… ready rehna!
+</div>`;
+return;
+}
+
+data.forEach(match=>{
+
+const total = match.total_slots || 1;
+const filled = match.filled_slots || 0;
+
+const percentage =
+(total > 0) ? (filled / total) * 100 : 0;
+
+const card =
+document.createElement("div");
+
+card.className = "match-card";
+
+card.innerHTML = `
+
+<img src="${match.banner || 'default.jpg'}" class="banner">
+
+<div class="tags">
+
+<span>${match.game_mode || 'MODE'}</span>
+<span>${match.map || 'BERMUDA'}</span>
+
+</div>
+
+<div class="title-row">
+
+<img src="logo.png" class="logo">
+
+<div>
+<h2>${match.title || 'Tournament'}</h2>
+<p>#MATCH ${match.id}</p>
+</div>
+
+</div>
+
+<div class="info-grid">
+
+<div class="info-box">
+<small>DATE & TIME</small>
+<h3>
+${match.match_time
+? new Date(match.match_time).toLocaleString()
+: "TBA"}
+</h3>
+</div>
+
+<div class="info-box">
+<small>PRIZE POOL</small>
+<h3>🪙 ${match.prize_pool || 0}</h3>
+</div>
+
+<div class="info-box">
+<small>PER KILL</small>
+<h3>🪙 ${match.per_kill || 0}</h3>
+</div>
+
+</div>
+
+<div class="progress-row">
+
+<div class="progress-bar">
+<div class="progress-fill"
+style="width:${percentage}%"></div>
+</div>
+
+<div class="slot-text">
+${filled} / ${total}
+</div>
+
+</div>
+
+<button class="join-btn"
+onclick="openSlots(${match.id})">
+
+🪙 ${match.entry_fee || 0} JOIN
+
+</button>
+
+`;
+
+container.appendChild(card);
+
+});
+
+}
+
+/* OPEN SLOT PAGE */
+
+function openSlots(id){
+
+  window.location.href =
+  `slotselect.html?id=${id}`;
+
+}
+
+/* OPEN RESULT PAGE */
+
+function openResult(game, id){
+  window.location.href = `result.html?game=${game}&id=${id}`;
+}
+/* TAB SWITCHING */
+
+document
+.querySelectorAll(".tab")
+.forEach(tab=>{
+
+  tab.addEventListener(
+    "click",
+    ()=>{
+
+      document
+      .querySelectorAll(".tab")
+      .forEach(t=>
+        t.classList.remove("active")
+      );
+
+      tab.classList.add("active");
+
+      currentStatus =
+      tab.dataset.status;
+
+      loadMatches();
+
+    }
+  );
+
+});
+
+/* REALTIME */
+
+client
+.channel("matches-live")
+
+.on(
+  "postgres_changes",
+  {
+    event:"*",
+    schema:"public",
+    table:"matches"
+  },
+
+  ()=>{
+
+    loadMatches();
+
+  }
+
+)
+
+.subscribe();
+
+/* START */
+
+loadCoins();
+
+loadMatches();
+
+</script>
+
+</body>
+</html>

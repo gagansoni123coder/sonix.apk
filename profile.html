@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile</title>
+
+<link rel="stylesheet" href="profile.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+
+<body>
+
+<!-- 🔥 PROFILE CARD -->
+<div class="profile-card">
+
+  <p id="name"></p>
+  <p id="uid"></p>
+  <p id="email"></p>
+
+  <div class="coins-box">
+    💰 <span id="coins">0</span> Coins
+  </div>
+
+</div>
+
+<!-- 🔥 MENU BUTTONS -->
+<div class="menu">
+
+  <a href="wallet.html" class="menu-item">
+    <img src="wallet.png">
+    <div class="overlay"></div>
+  </a>
+
+  <a href="history.html" class="menu-item">
+    <img src="history.png">
+    <div class="overlay"></div>
+  </a>
+
+  <a href="rewards.html" class="menu-item">
+    <img src="rewards.png">
+    <div class="overlay"></div>
+  </a>
+
+  <a href="support.html" class="menu-item">
+    <img src="support.png">
+    <div class="overlay"></div>
+  </a>
+
+  <a href="terms.html" class="menu-item">
+    <img src="terms.png">
+    <div class="overlay"></div>
+  </a>
+
+  <a href="#" onclick="logout()" class="menu-item">
+    <img src="logout.png">
+    <div class="overlay"></div>
+  </a>
+
+</div>
+
+<!-- 🔙 BACK BUTTON -->
+<div class="back-btn" onclick="goBack()">← Back</div>
+
+<script>
+const supabaseClient = supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+// INIT
+async function init(){
+
+  const { data: { user }, error } =
+  await supabaseClient.auth.getUser();
+
+  if(error || !user){
+    window.location.href = "login.html";
+    return;
+  }
+
+  loadUser(user.id); // ✅ id pass kar (not uid)
+}
+
+// LOAD USER
+async function loadUser(userId){
+
+  const { data, error } = await supabaseClient
+  .from("users")
+  .select("*")
+  .eq("id", userId) // ✅ correct
+  .maybeSingle();
+
+  if(error){
+    console.log("ERROR:", error);
+    return;
+  }
+
+  if(!data){
+    console.log("No user found");
+
+    document.getElementById("name").innerText = "Player";
+    document.getElementById("id").innerText = "UID: ---";
+    document.getElementById("email").innerText = "Email: ---";
+    document.getElementById("coins").innerText = "0";
+    return;
+  }
+
+  // ✅ SAFE DATA USE
+  document.getElementById("name").innerText =
+    data.name || "Player";
+
+  document.getElementById("uid").innerText =
+    "UID: " + (data.id || "---");
+
+  document.getElementById("email").innerText =
+    "Email: " + (data.email || "---");
+
+  document.getElementById("coins").innerText =
+    data.coins || 0;
+}
+
+// LOGOUT
+async function logout(){
+  await supabaseClient.auth.signOut();
+  window.location.href = "login.html";
+}
+
+// BACK
+function goBack(){
+  window.location.href = "home.html";
+}
+
+init();
+</script>
+
+</body>
+</html>

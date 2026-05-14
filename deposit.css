@@ -1,0 +1,56 @@
+body {
+  background: linear-gradient(135deg, #0a001a, #1a0033);
+  color: white;
+  text-align: center;
+  font-family: Arial;
+  padding: 20px;
+}
+
+h2 {
+  color: cyan;
+  text-shadow: 0 0 10px cyan;
+}
+
+.box {
+  background: #120022;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px cyan;
+  margin-top: 20px;
+  object-fit:contain;
+}
+
+/* QR /
+.qr {
+  width: 220px !important;
+  height: 220px !important;
+  object-fit: contain;
+  display: block;
+  margin: 10px auto;
+}
+
+
+
+/ TIMER /
+#timer {
+  color: yellow;
+  margin: 15px 0;
+  font-size: 22px;
+}
+
+/ BUTTON */
+button {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(45deg, cyan, blue);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px cyan;
+}

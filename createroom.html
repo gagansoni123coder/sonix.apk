@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Admin Create Room</title>
+
+<link rel="stylesheet" href="createroom.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<div class="layout">
+
+<!-- ADMIN PANEL -->
+<div class="panel">
+
+<h2>👑 CREATE MATCH (ADMIN)</h2>
+
+<!-- TOURNAMENT TYPE -->
+<h3>🏆 Tournament Type</h3>
+<div class="chips">
+  <button class="chip type active" onclick="setType('FULL MAP',this)">FULL MAP</button>
+  <button class="chip type" onclick="setType('CS 1V1',this)">CS 1V1</button>
+  <button class="chip type" onclick="setType('CS 2V2',this)">CS 2V2</button>
+  <button class="chip type" onclick="setType('LW 1V1',this)">LW 1V1</button>
+  <button class="chip type" onclick="setType('SURVIVAL',this)">SURVIVAL</button>
+  <button class="chip type" onclick="setType('FREE MATCH',this)">FREE MATCH</button>
+</div>
+
+<!-- GAME MODE -->
+<h3>🎮 Game Mode</h3>
+<div class="chips">
+  <button class="chip mode active" onclick="setMode('BR',this)">BR</button>
+  <button class="chip mode" onclick="setMode('CS',this)">CS</button>
+</div>
+
+<!-- TEAM TYPE -->
+<h3>👥 Team Type</h3>
+<div class="chips">
+  <button class="chip team active" onclick="setTeam('SOLO',this)">SOLO</button>
+  <button class="chip team" onclick="setTeam('DUO',this)">DUO</button>
+  <button class="chip team" onclick="setTeam('SQUAD',this)">SQUAD</button>
+</div>
+
+<!-- INPUTS -->
+<input id="title" placeholder="Match Title">
+<input id="entryFee" placeholder="Entry Fee">
+<input id="prizePool" placeholder="Prize Pool">
+<input id="slots" placeholder="Total Slots">
+
+<input type="datetime-local" id="matchTime">
+
+<textarea id="rules" placeholder="Match Rules"></textarea>
+
+<input type="file" id="banner">
+
+<button onclick="createMatch()">🚀 CREATE MATCH</button>
+
+</div>
+
+</div>
+
+<script>
+
+/* SUPABASE CLIENT */
+const client = window.supabase.createClient(
+"https://ggkqsfkxmmusrmczoyuk.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+/* STATE */
+let selectedType = "FULL MAP";
+let selectedMode = "BR";
+let selectedTeam = "SOLO";
+
+/* SWITCH TYPE */
+function setType(val, el){
+selectedType = val;
+document.querySelectorAll(".type").forEach(b=>b.classList.remove("active"));
+el.classList.add("active");
+}
+
+/* SWITCH MODE */
+function setMode(val, el){
+selectedMode = val;
+document.querySelectorAll(".mode").forEach(b=>b.classList.remove("active"));
+el.classList.add("active");
+}
+
+/* SWITCH TEAM */
+function setTeam(val, el){
+selectedTeam = val;
+document.querySelectorAll(".team").forEach(b=>b.classList.remove("active"));
+el.classList.add("active");
+}
+
+/* CREATE MATCH (ADMIN ONLY) */
+async function createMatch(){
+
+const title = document.getElementById("title").value;
+const entryFee = document.getElementById("entryFee").value;
+const prizePool = document.getElementById("prizePool").value;
+const slots = document.getElementById("slots").value;
+const matchTime = document.getElementById("matchTime").value;
+const rules = document.getElementById("rules").value;
+const bannerFile = document.getElementById("banner").files[0];
+
+if(!title || !entryFee || !prizePool || !slots){
+alert("Fill required fields");
+return;
+}
+
+/* BANNER URL */
+
+let bannerURL = "";
+
+/* UPLOAD */
+
+if(bannerFile){
+
+const fileName =
+Date.now() + "-" + bannerFile.name;
+
+/* UPLOAD TO STORAGE */
+
+const { error: uploadError } =
+await client.storage
+.from("banners")
+.upload(fileName, bannerFile);
+
+if(uploadError){
+
+alert(uploadError.message);
+
+return;
+}
+
+/* GET PUBLIC URL */
+
+const { data } =
+client.storage
+.from("banners")
+.getPublicUrl(fileName);
+
+/* SAVE URL */
+
+bannerURL = data.publicUrl;
+
+console.log("Banner URL:", bannerURL);
+
+}
+/* INSERT ONLY (ADMIN TASK) */
+const { error: insertError } = await client
+.from("matches")
+.insert([{
+title,
+entry_fee: Number(entryFee),
+prize_pool: Number(prizePool),
+total_slots: Number(slots),
+filled_slots: 0,
+
+match_time: matchTime,
+rules: rules,
+banner: bannerURL,
+
+tournament_type: selectedType,
+game_mode: selectedMode,
+team_type: selectedTeam,
+
+status: "upcoming"
+}]);
+
+if(insertError){
+alert(insertError.message);
+return;
+}
+
+alert("🔥 Match Created Successfully");
+}
+  async function checkAdmin(){
+
+  const {
+    data:{ user }
+  } = await client.auth.getUser();
+
+  if(!user){
+
+    window.location.href =
+    "admin-login.html";
+
+    return;
+  }
+
+  const { data } =
+  await client
+  .from("users")
+  .select("is_admin")
+  .eq("id",user.id)
+  .single();
+
+  if(!data?.is_admin){
+
+    window.location.href =
+    "admin-login.html";
+
+  }
+
+}
+
+checkAdmin();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Audit Logs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Segoe UI',sans-serif;
+    }
+
+    body{
+      background:#050505;
+      color:#fff;
+      min-height:100vh;
+      padding:20px;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      width:500px;
+      height:500px;
+      background:radial-gradient(circle,#ff0000,transparent);
+      filter:blur(140px);
+      opacity:.4;
+      top:20%;
+      left:30%;
+      z-index:0;
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:20px;
+      position:relative;
+      z-index:2;
+      text-shadow:0 0 10px red;
+    }
+
+    #logs{
+      display:flex;
+      flex-direction:column;
+      gap:15px;
+      position:relative;
+      z-index:2;
+    }
+
+    .log-card{
+      background:rgba(20,20,20,.92);
+      padding:15px;
+      border-radius:15px;
+      border:1px solid rgba(255,0,0,.25);
+      box-shadow:0 0 15px rgba(255,0,0,.25);
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-size:14px;
+      margin:6px 0;
+      color:#ccc;
+      word-break:break-word;
+    }
+
+    .badge{
+      font-weight:bold;
+      color:#ff4d4d;
+    }
+
+    .add{color:#00e676;}
+    .remove{color:#ff5252;}
+    .approve{color:#00e676;}
+    .reject{color:#ff5252;}
+    .login{border-color:rgba(255,215,0,.45);}
+
+    .reason{
+      margin-top:8px;
+      color:#ff7777;
+      font-size:13px;
+    }
+
+    .time{
+      font-size:12px;
+      color:#888;
+      margin-top:8px;
+      text-align:right;
+    }
+
+    .empty{
+      text-align:center;
+      color:#777;
+      margin-top:40px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🧾 Admin Audit Logs</h1>
+
+<div id="logs"></div>
+
+<script>
+const supabaseClient = supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+async function loadLogs(){
+
+  const { data, error } = await supabaseClient
+    .from("audit_logs")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  const container = document.getElementById("logs");
+
+  if(error){
+    console.log("LOG ERROR:", error);
+    container.innerHTML = `<div class="empty">Failed to load logs ❌</div>`;
+    return;
+  }
+
+  if(!data || data.length === 0){
+    container.innerHTML = `<div class="empty">No Logs Found 📭</div>`;
+    return;
+  }
+
+  let html = "";
+
+  data.forEach(log => {
+
+    let typeClass = "badge";
+
+    if(log.actions?.includes("add")) typeClass = "add";
+    if(log.actions?.includes("remove")) typeClass = "remove";
+    if(log.actions?.includes("approved")) typeClass = "approve";
+    if(log.actions?.includes("rejected")) typeClass = "reject";
+
+    if(log.actions === "admin_login"){
+
+      html += `
+        <div class="log-card login">
+
+          <div class="row">
+            <span>👑 Admin Name</span>
+            <span>${log.admin_name || "Admin"}</span>
+          </div>
+
+          <div class="row">
+            <span>🆔 Admin ID</span>
+            <span>${log.admin_id || "N/A"}</span>
+          </div>
+
+          <div class="row">
+            <span>⚡ Action</span>
+            <span class="badge">${log.actions}</span>
+          </div>
+
+          <div class="row">
+            <span>📌 Status</span>
+            <span>${log.status || "success"}</span>
+          </div>
+
+          <div class="time">
+            ${new Date(log.created_at).toLocaleString()}
+          </div>
+
+        </div>
+      `;
+
+      return;
+    }
+
+    html += `
+      <div class="log-card">
+
+        <div class="row">
+          <span>👤 Admin</span>
+          <span>${log.admin_name || log.admin_id || "N/A"}</span>
+        </div>
+
+        <div class="row">
+          <span>🎮 User</span>
+          <span>${log.target_user || "N/A"}</span>
+        </div>
+
+        <div class="row">
+          <span>⚡ Action</span>
+          <span class="${typeClass}">${log.actions || "Unknown"}</span>
+        </div>
+
+        <div class="row">
+          <span>💰 Amount</span>
+          <span class="${typeClass}">${log.amount ?? 0}</span>
+        </div>
+
+        <div class="row">
+          <span>📌 Status</span>
+          <span>${log.status || "success"}</span>
+        </div>
+
+        ${
+          log.reason
+          ? `<div class="reason">📝 ${log.reason}</div>`
+          : ""
+        }
+
+        <div class="time">
+          ${new Date(log.created_at).toLocaleString()}
+        </div>
+
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+supabaseClient
+  .channel("audit-live")
+  .on(
+    "postgres_changes",
+    {
+      event:"*",
+      schema:"public",
+      table:"audit_logs"
+    },
+    () => loadLogs()
+  )
+  .subscribe();
+
+loadLogs();
+  async function checkAdmin(){
+
+  const {
+    data:{ user }
+  } = await client.auth.getUser();
+
+  if(!user){
+
+    window.location.href =
+    "admin-login.html";
+
+    return;
+  }
+
+  const { data } =
+  await client
+  .from("users")
+  .select("is_admin")
+  .eq("id",user.id)
+  .single();
+
+  if(!data?.is_admin){
+
+    window.location.href =
+    "admin-login.html";
+
+  }
+
+}
+
+checkAdmin();
+</script>
+
+</body>
+</html>

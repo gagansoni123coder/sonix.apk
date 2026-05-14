@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title> SoniX Esports SPIN & WIN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0a0a0a;
+color:white;
+overflow:hidden;
+}
+
+/* TOP BAR */
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 20px;
+background:#111;
+box-shadow:0 0 25px red;
+}
+
+.back{
+font-size:22px;
+cursor:pointer;
+}
+
+.title{
+font-size:20px;
+font-weight:bold;
+color:#ff3b3b;
+text-shadow:0 0 10px red;
+}
+
+.coins{
+color:gold;
+font-weight:bold;
+}
+
+/* CENTER */
+.center{
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:85vh;
+}
+
+/* POINTER */
+.pointer{
+width:0;
+height:0;
+border-left:15px solid transparent;
+border-right:15px solid transparent;
+border-bottom:25px solid gold;
+margin-bottom:-10px;
+filter:drop-shadow(0 0 5px gold);
+}
+
+/* WHEEL */
+#wheel{
+width:290px;
+height:290px;
+border-radius:50%;
+border:10px solid gold;
+box-shadow:0 0 50px red;
+transition:transform 5s cubic-bezier(0.15, 0.85, 0.25, 1);
+
+/* 🎡 REAL CASINO VALUES */
+background:conic-gradient(
+#ff3b3b 0deg 60deg,
+#111 60deg 120deg,
+#ffcc00 120deg 180deg,
+#111 180deg 240deg,
+#00ff88 240deg 300deg,
+#ff3b3b 300deg 360deg
+);
+}
+
+/* BUTTON */
+button{
+margin-top:25px;
+padding:12px 30px;
+border:none;
+border-radius:10px;
+background:linear-gradient(45deg,red,darkred);
+color:white;
+font-size:16px;
+cursor:pointer;
+box-shadow:0 0 15px red;
+}
+
+button:active{
+transform:scale(0.95);
+}
+
+/* RESULT */
+#result{
+margin-top:10px;
+font-size:18px;
+color:gold;
+text-shadow:0 0 10px gold;
+}
+
+/* COIN ANIMATION */
+.coin-pop{
+animation: pop 0.8s ease;
+}
+
+@keyframes pop{
+0%{transform:scale(0.5);opacity:0;}
+50%{transform:scale(1.3);opacity:1;}
+100%{transform:scale(1);opacity:1;}
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- SOUND -->
+<audio id="spinSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+<audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+<audio id="loseSound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
+
+<!-- TOP BAR -->
+<div class="topbar">
+
+<div class="back" onclick="goBack()">⬅</div>
+
+<div class="title">ROULETTE 🎰 PRO MAX</div>
+
+<div class="coins">🪙 <span id="coinCount">0</span></div>
+
+</div>
+
+<!-- CENTER -->
+<div class="center">
+
+<div class="pointer"></div>
+<div id="wheel"></div>
+
+<button onclick="spin()">SPIN (5 🪙)</button>
+
+<div id="result"></div>
+
+</div>
+
+<script>
+
+const client = window.supabase.createClient(
+"https://ggkqsfkxmmusrmczoyuk.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+</script>
+
+<!-- ✅ transaction.js LOAD -->
+<script src="transaction.js"></script>
+
+<script>
+
+/* =========================
+   VARIABLES
+========================= */
+
+let spinning = false;
+let lastSpin = 0;
+
+/* =========================
+   LOAD USER COINS
+========================= */
+
+async function loadCoins(){
+
+const {
+data:{ user }
+} = await client.auth.getUser();
+
+if(!user) return;
+
+const { data, error } = await client
+.from("users")
+.select("coins")
+.eq("uid", user.id)
+.single();
+
+if(error){
+
+console.log(error);
+
+return;
+
+}
+
+document.getElementById(
+"coinCount"
+).innerText = data?.coins || 0;
+
+}
+
+loadCoins();
+
+/* =========================
+   REALTIME COINS
+========================= */
+
+client
+.channel("coins-realtime")
+
+.on(
+"postgres_changes",
+{
+event:"UPDATE",
+schema:"public",
+table:"users"
+},
+payload=>{
+
+loadCoins();
+
+}
+)
+
+.subscribe();
+
+/* =========================
+   BACK BUTTON
+========================= */
+
+function goBack(){
+
+window.location.href =
+"profile.html";
+
+}
+
+/* =========================
+   CONFETTI
+========================= */
+
+function fireConfetti(){
+
+confetti({
+
+particleCount:150,
+spread:100,
+origin:{ y:0.6 }
+
+});
+
+}
+
+/* =========================
+   COIN ANIMATION
+========================= */
+
+function animateCoins(
+oldVal,
+newVal
+){
+
+const el =
+document.getElementById(
+"coinCount"
+);
+
+let current = oldVal;
+
+const interval =
+setInterval(()=>{
+
+if(current >= newVal){
+
+clearInterval(interval);
+
+return;
+
+}
+
+current++;
+
+el.innerText = current;
+
+},20);
+
+}
+
+/* =========================
+   SPIN FUNCTION
+========================= */
+
+async function spin(){
+
+if(spinning) return;
+
+/* COOLDOWN */
+
+if(Date.now() - lastSpin < 4000){
+
+alert("Wait cooldown ⏳");
+
+return;
+
+}
+
+lastSpin = Date.now();
+
+/* AUDIO */
+
+const spinSound =
+document.getElementById(
+"spinSound"
+);
+
+const winSound =
+document.getElementById(
+"winSound"
+);
+
+const loseSound =
+document.getElementById(
+"loseSound"
+);
+
+/* USER */
+
+const {
+data:{ user }
+} = await client.auth.getUser();
+
+if(!user){
+
+alert("Login required");
+
+return;
+
+}
+
+/* GET USER COINS */
+
+const {
+data:userData,
+error:userError
+} = await client
+.from("users")
+.select("coins")
+.eq("uid", user.id)
+.single();
+
+if(userError){
+
+console.log(userError);
+
+return;
+
+}
+
+if((userData?.coins || 0) < 5){
+
+alert("Not enough coins ❌");
+
+return;
+
+}
+
+/* OLD COINS */
+
+const oldCoins =
+Number(userData.coins || 0);
+
+/* DEDUCT 5 */
+
+const deductedCoins =
+oldCoins - 5;
+
+/* UPDATE USER */
+
+const {
+error:updateError
+} = await client
+.from("users")
+.update({
+coins: deductedCoins
+})
+.eq("uid", user.id);
+
+if(updateError){
+
+console.log(updateError);
+
+alert("Coin update failed");
+
+return;
+
+}
+
+/* LOAD NEW */
+
+loadCoins();
+
+/* TRANSACTION LOG */
+
+await addTransaction({
+
+uid:user.id,
+type:"spin_cost",
+title:"Spin & Win Entry",
+amount:-5
+
+});
+
+/* START SPIN */
+
+spinning = true;
+
+spinSound.currentTime = 0;
+
+spinSound.play();
+
+/* ROTATE */
+
+const wheel =
+document.getElementById(
+"wheel"
+);
+
+const deg =
+Math.floor(
+3600 + Math.random()*2000
+);
+
+wheel.style.transform =
+`rotate(${deg}deg)`;
+
+/* RESULT AFTER 5 SEC */
+
+setTimeout(async ()=>{
+
+spinning = false;
+
+/* 🎯 ROULETTE LOGIC */
+
+const rewards =
+[0,1,3,5,8,10];
+
+const segment =
+360 / rewards.length;
+
+const normalized =
+(360 - (deg % 360)) % 360;
+
+const index =
+Math.floor(
+normalized / segment
+);
+
+const win =
+rewards[index];
+
+/* SOUND */
+
+if(win > 0){
+
+winSound.play();
+
+fireConfetti();
+
+}else{
+
+loseSound.play();
+
+}
+
+/* RESULT TEXT */
+
+document.getElementById(
+"result"
+).innerText =
+
+`🎰 You won ${win} coins!`;
+
+/* FINAL COINS */
+
+const finalCoins =
+deductedCoins + win;
+
+/* UPDATE DB */
+
+const {
+error:finalError
+} = await client
+.from("users")
+.update({
+coins: finalCoins
+})
+.eq("uid", user.id);
+
+if(finalError){
+
+console.log(finalError);
+
+return;
+
+}
+
+/* WIN TRANSACTION */
+
+await addTransaction({
+
+uid:user.id,
+type:"spin_win",
+title:`Spin Reward Won`,
+amount:win
+
+});
+
+/* ANIMATION */
+
+animateCoins(
+deductedCoins,
+finalCoins
+);
+
+/* REFRESH */
+
+loadCoins();
+
+},5000);
+
+}
+
+</script>
+
+</body>
+</html>

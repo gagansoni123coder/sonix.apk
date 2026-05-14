@@ -1,0 +1,137 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: radial-gradient(circle at top, #1a0000, #000000);
+}
+
+/* Center */
+.login-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Box */
+.login-box {
+  width: 340px;
+  padding: 30px;
+  background: rgba(15, 0, 0, 0.95);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 0, 0, 0.5);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.7),
+              0 0 60px rgba(255, 0, 0, 0.3);
+  text-align: center;
+}
+
+/* Title */
+.title {
+  color: red;
+  margin-bottom: 20px;
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px red;
+}
+
+/* Inputs */
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  background: #0a0000;
+  border: 1px solid #ff2b2b;
+  border-radius: 6px;
+  color: white;
+  outline: none;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+input:focus {
+  box-shadow: 0 0 18px red;
+}
+
+/* Button */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: linear-gradient(45deg, #ff0000, #8b0000);
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+  letter-spacing: 2px;
+  box-shadow: 0 0 15px red;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px red;
+}
+/* Button loader layout */
+button {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hide loader by default */
+.loader {
+  display: none;
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top: 3px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* spinning animation */
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* loading state */
+button.loading .btn-text {
+  visibility: hidden;
+}
+
+button.loading .loader {
+  display: block;
+}
+
+/* optional disable effect */
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Register text */
+.register-text {
+  margin-top: 15px;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.register-text a {
+  color: #ff2b2b;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.register-text a:hover {
+  text-shadow: 0 0 10px red;
+}
+
+/* Message */
+#msg {
+  margin-top: 10px;
+  color: #ff4d4d;
+  font-size: 13px;
+}

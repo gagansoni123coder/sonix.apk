@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Coins Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  
+  
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:sans-serif;
+    }
+
+    body{
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#050505;
+      color:#fff;
+    }
+
+    /* Glow BG */
+    body::before{
+      content:"";
+      position:absolute;
+      width:500px;
+      height:500px;
+      background:radial-gradient(circle,#ff0000,transparent);
+      filter:blur(120px);
+      opacity:0.5;
+    }
+
+    h1{
+      position:absolute;
+      top:20px;
+      text-align:center;
+      width:100%;
+    }
+
+    .card{
+      width:90%;
+      max-width:340px;
+      padding:25px;
+      border-radius:20px;
+      background:#111;
+      box-shadow:0 0 25px rgba(255,0,0,0.4);
+      z-index:2;
+      text-align:center;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin:10px 0;
+      border:none;
+      border-radius:10px;
+      background:#1a1a1a;
+      color:#fff;
+      outline:none;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      border:none;
+      border-radius:10px;
+      font-size:15px;
+      cursor:pointer;
+      color:#fff;
+    }
+
+    .add{
+      background:linear-gradient(45deg,#00c853,#69f0ae);
+      box-shadow:0 0 10px #00c853;
+    }
+
+    .remove{
+      background:linear-gradient(45deg,#ff0000,#ff4d4d);
+      box-shadow:0 0 10px red;
+    }
+
+    #status{
+      margin-top:12px;
+      font-size:13px;
+      color:#ccc;
+    }
+  </style></head><body><h1>🛠 Admin Coin Control</h1><div class="card">  <input type="text" id="id" placeholder="Enter User UID">
+  <input type="number" id="amount" placeholder="Enter Amount"><button class="add" onclick="addCoins()">➕ Add Coins</button>
+<button class="remove" onclick="removeCoins()">➖ Deduct Coins</button>
+
+  <div id="status"></div></div>
+    <script>
+const supabaseClient = supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+let loading = false;
+
+/* STATUS */
+function setStatus(msg, isError=false){
+  const el = document.getElementById("status");
+  el.innerText = msg;
+  el.style.color = isError ? "#ff4d4d" : "#00e676";
+}
+
+/* ➕ ADD COINS */
+async function addCoins(){
+
+  if(loading) return;
+  loading = true;
+
+  const userId = document.getElementById("id").value.trim();
+  const amount = Number(document.getElementById("amount").value);
+
+  if(!userId || amount <= 0){
+    setStatus("Enter valid details ❌", true);
+    loading = false;
+    return;
+  }
+
+  await supabaseClient.rpc("admin_update_coins", {
+    p_admin: user.id,
+    p_user: document.getElementById("id").value,
+    p_amount: Number(document.getElementById("amount").value),
+    p_action: "add"
+  });
+
+  loading = false;
+
+  if(error){
+    console.log(error);
+    setStatus("Failed ❌", true);
+    return;
+  }
+
+  setStatus("Coins Added ✅");
+}
+
+
+/* ➖ REMOVE COINS */
+async function removeCoins(){
+
+  if(loading) return;
+  loading = true;
+
+  const userId = document.getElementById("id").value.trim();
+  const amount = Number(document.getElementById("amount").value);
+
+  if(!userId || amount <= 0){
+    setStatus("Enter valid details ❌", true);
+    loading = false;
+    return;
+  }
+  await supabaseClient.rpc("admin_update_coins", {
+    p_admin: user.id,
+    p_user: document.getElementById("id").value,
+    p_amount: Number(document.getElementById("amount").value),
+    p_action: "remove"
+  });
+
+  loading = false;
+
+  if(error){
+    console.log(error);
+    setStatus("Failed ❌", true);
+    return;
+  }
+
+  setStatus("Coins Deducted 💸");
+}
+      async function checkAdmin(){
+
+  const {
+    data:{ user }
+  } = await supabaseClient.auth.getUser();
+
+  if(!user){
+
+    window.location.href =
+    "admin-login.html";
+
+    return;
+  }
+
+  const { data } =
+  await supabaseClient
+  .from("users")
+  .select("is_admin")
+  .eq("id",user.id)
+  .single();
+
+  if(!data?.is_admin){
+
+    window.location.href =
+    "admin-login.html";
+
+  }
+
+}
+
+checkAdmin();
+    </script>
+</body>
+</html>

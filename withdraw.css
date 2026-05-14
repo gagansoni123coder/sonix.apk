@@ -1,0 +1,253 @@
+body{
+  margin:0;
+  background:#070707;
+  font-family:Arial;
+  color:white;
+  padding-bottom:50px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px;
+  background:#111;
+  border-bottom:1px solid #ff004c;
+}
+
+.title-box{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.logo{
+  width:40px;
+  height:40px;
+  border-radius:12px;
+}
+
+.title-box span{
+  color:#ff2d55;
+  font-size:20px;
+  font-weight:bold;
+}
+
+.coins-box{
+  background:#1a1a1a;
+  padding:10px 15px;
+  border-radius:15px;
+  border:1px solid #ff2d55;
+}
+
+.main-card{
+  margin:18px;
+  background:#111;
+  border-radius:25px;
+  padding:20px;
+}
+
+.balance-box{
+  margin:20px 0;
+  text-align:center;
+  font-size:42px;
+  color:#ff2d55;
+  font-weight:bold;
+}
+
+.input-box{
+  margin-bottom:16px;
+}
+
+.input-box label{
+  display:block;
+  margin-bottom:8px;
+  color:#aaa;
+}
+
+.input-box input{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:16px;
+  background:#1d1d1d;
+  color:white;
+  box-sizing:border-box;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:18px;
+  background:linear-gradient(90deg,#ff003c,#ff4d6d);
+  color:white;
+  font-size:18px;
+  font-weight:bold;
+}
+
+.rules{
+  margin-top:16px;
+  color:#888;
+  line-height:28px;
+}
+
+.history-box{
+  margin:18px;
+  background:#111;
+  border-radius:25px;
+  padding:20px;
+}
+
+.history-item{
+  background:#1a1a1a;
+  border-radius:18px;
+  padding:14px;
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+
+.amt{
+  font-size:20px;
+  font-weight:bold;
+}
+
+.upi{
+  color:#888;
+  margin-top:4px;
+}
+
+.status{
+  padding:6px 12px;
+  border-radius:12px;
+  text-transform:uppercase;
+  font-size:12px;
+}
+
+.status.pending{
+  background:#ff9500;
+}
+
+.status.approved{
+  background:#00c853;
+}
+
+.status.rejected{
+  background:#ff1744;
+}
+
+.reason{
+  margin-top:6px;
+  color:#ff8080;
+  font-size:12px;
+}
+.withdraw-card{
+
+background:#111;
+
+border:1px solid #222;
+
+border-radius:16px;
+
+padding:16px;
+
+margin-bottom:14px;
+
+box-shadow:
+0 0 15px rgba(0,0,0,.5);
+
+}
+
+/* TOP */
+
+.withdraw-card .top{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+margin-bottom:10px;
+
+}
+
+.withdraw-card h3{
+
+color:#ff4040;
+
+font-size:16px;
+
+}
+
+.withdraw-card .top p{
+
+font-size:12px;
+
+opacity:.6;
+
+}
+
+/* STATUS */
+
+.status{
+
+padding:5px 10px;
+
+border-radius:10px;
+
+font-size:12px;
+
+font-weight:bold;
+
+}
+
+.status.pending{
+
+background:#444;
+color:#fff;
+
+}
+
+.status.approved{
+
+background:green;
+color:#fff;
+
+}
+
+.status.rejected{
+
+background:red;
+color:#fff;
+
+}
+
+/* MIDDLE */
+
+.middle p{
+
+font-size:13px;
+
+margin:4px 0;
+
+}
+
+/* REASON */
+
+.reason-box{
+
+margin-top:10px;
+
+background:#2a0000;
+
+padding:10px;
+
+border-radius:10px;
+
+color:#ff4d4d;
+
+font-size:12px;
+
+}

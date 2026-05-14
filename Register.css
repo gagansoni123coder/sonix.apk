@@ -1,0 +1,134 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: radial-gradient(circle at top, #1a0000, #000000);
+}
+
+/* Center */
+.container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Box */
+.box {
+  width: 360px;
+  padding: 30px;
+  background: rgba(15, 0, 0, 0.95);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 0, 0, 0.5);
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.6),
+              0 0 70px rgba(255, 0, 0, 0.2);
+  text-align: center;
+}
+
+/* Title */
+.title {
+  color: #ff2b2b;
+  margin-bottom: 15px;
+  letter-spacing: 3px;
+  text-shadow: 0 0 12px red;
+}
+
+/* Inputs */
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  background: #0a0000;
+  border: 1px solid #ff2b2b;
+  border-radius: 6px;
+  color: white;
+  outline: none;
+  box-shadow: 0 0 10px rgba(255,0,0,0.3);
+}
+
+input:focus {
+  box-shadow: 0 0 18px red;
+}
+
+/* Button */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  background: linear-gradient(45deg, #ff0000, #8b0000);
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+  letter-spacing: 2px;
+  box-shadow: 0 0 15px red;
+  position: relative;
+  overflow: hidden;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px red;
+}
+
+/* Loader */
+.loader {
+  display: none;
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top: 3px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+button.loading .btn-text {
+  visibility: hidden;
+}
+
+button.loading .loader {
+  display: block;
+}
+
+/* Login link */
+.login-text {
+  margin-top: 15px;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.login-text a {
+  color: #ff2b2b;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.login-text a:hover {
+  text-shadow: 0 0 10px red;
+}
+
+/* Message */
+#msg {
+  color: #ff4d4d;
+  margin-top: 10px;
+  font-size: 13px;
+}
+#particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: radial-gradient(circle at top, #1a0000, #000000);
+}

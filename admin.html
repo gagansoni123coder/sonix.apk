@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>🎮 Admin</h2>
+
+  <button onclick="go('dashboard.html')">📊 Dashboard</button>
+  <button onclick="showPage('deposit-request.html')">💰 Deposits</button>
+  <button onclick="showPage('withdraw-request.html')">💸 Withdraw</button>
+  <button onclick="showPage('users')">👤 Users</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- DEFAULT -->
+  <h2>👑 Control Panel</h2>
+  <p>Select an option from left menu</p>
+
+  <!-- DEPOSITS -->
+  <div id="deposits" style="display:none;">
+    <h2>💰 Deposit Requests</h2>
+    <div id="depositList"></div>
+  </div>
+
+  <!-- WITHDRAW -->
+  <div id="withdraw" style="display:none;">
+    <h2>💸 Withdraw Requests</h2>
+    <div id="withdrawList">No data</div>
+  </div>
+
+  <!-- USERS -->
+  <div id="users" style="display:none;">
+    <h2>👤 Users</h2>
+    <div id="userList">Coming soon</div>
+  </div>
+
+</div>
+
+<script>
+
+// redirect
+function go(page){
+  window.location.href = page;
+}
+
+// show sections
+function showPage(page){
+  document.getElementById("deposits").style.display = "none";
+  document.getElementById("withdraw").style.display = "none";
+  document.getElementById("users").style.display = "none";
+
+  document.getElementById(page).style.display = "block";
+}
+
+</script>
+
+</body>
+</html>

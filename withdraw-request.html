@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoniX Admin - Withdraws</title>
+
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>🎮 Withdraw Control Panel</h1>
+  </div>
+
+  <div id="stats" class="stats"></div>
+
+  <div id="withdrawList" class="list"></div>
+
+</div>
+
+<script>
+
+const client = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+/* 🔥 LOAD WITHDRAW REQUESTS */
+async function loadWithdraws(){
+
+  const { data, error } = await client
+    .from("withdraws")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  console.log("withdraws:", data);
+  console.log("ERROR:", error);
+
+  if(error){
+    console.log(error);
+
+    document.getElementById("withdrawList").innerHTML =`
+    <p>Failed to load ❌</p>`;
+
+    return;
+  }
+
+  let html = "";
+  let total = 0;
+
+  if(!data || data.length === 0){
+
+    document.getElementById("withdrawList").innerHTML =`
+    <p>No requests found 📭</p>`;
+
+    document.getElementById("stats").innerHTML =`
+    Pending Requests: 0`;
+
+    return;
+  }
+
+  data.forEach(w => {
+
+    const status =
+    (w.status || "").toLowerCase();
+
+    if(status === "pending"){
+      total++;
+    }
+
+    html += `
+    <div class="card ${status}">
+
+      <div class="row">
+        <span>👤 ${w.user_id || "N/A"}</span>
+        <span>₹${w.amount || 0}</span>
+      </div>
+
+      <div class="row">
+        <span>💳 ${w.upi || "No UPI"}</span>
+
+        <span class="status">
+          ${w.status || "unknown"}
+        </span>
+      </div>
+
+      <div class="date">
+        ${new Date(w.created_at).toLocaleString()}
+      </div>
+
+      ${
+        w.rejection_reason
+        ?`
+        
+        <div class="reason">
+          ❌ ${w.rejection_reason}
+        </div>`
+        
+        :
+        ""
+      }
+
+      ${
+        status === "pending"
+        ?`
+        
+        <div class="actions">
+
+          <button
+            onclick="approveWithdraw('${w.id}','${w.user_id}',${w.amount})"
+            class="approve"
+          >
+            Approve
+          </button>
+
+          <button
+            onclick="rejectWithdraw('${w.id}','${w.user_id}',${w.amount})"
+            class="reject"
+          >
+            Reject
+          </button>
+
+        </div>`
+        
+        :
+        ""
+      }
+
+    </div>
+    `;
+  });
+
+  document.getElementById("withdrawList").innerHTML = html;
+
+  document.getElementById("stats").innerHTML =`
+  Pending Requests: ${total}`;
+}
+
+
+/* ✅ APPROVE WITHDRAW */
+async function approveWithdraw(id, uid, amount){
+
+  const { data:{ user:admin } } = await client.auth.getUser();
+
+  const { error:updateError } = await client
+    .from("withdraws")
+    .update({ status:"approved" })
+    .eq("id", id);
+
+  if(updateError){
+    console.log("WITHDRAW UPDATE ERROR:", updateError);
+    alert(updateError.message);
+    return;
+  }
+
+  await client
+    .from("transactions")
+    .update({ status:"approved" })
+    .eq("withdraw_id", id);
+
+  await client
+    .from("notifications")
+    .insert([{
+      uid: uid,
+      title: "✅ Withdraw Approved",
+      message: "Your withdraw request has been approved Successfully , kindly check upi wallet| bank account.",
+      type: "withdraw",
+      is_read: false
+    }]);
+
+  await client
+    .from("audit_logs")
+    .insert([{
+      admin_id: admin?.id || null,
+      actions: "withdraw_approved",
+      target_user: uid,
+      amount: Number(amount),
+      status: "approved",
+      reason: null
+    }]);
+
+  alert("Withdraw Approved ✅");
+  loadWithdraws();
+}
+
+
+/* ❌ REJECT WITHDRAW */
+async function rejectWithdraw(id, uid, amount){
+
+  const reason = prompt("Reject reason?");
+  if(!reason) return;
+
+  const { data:{ user:admin } } = await client.auth.getUser();
+
+  const { error:updateError } = await client
+    .from("withdraws")
+    .update({
+      status:"rejected",
+      rejection_reason:reason
+    })
+    .eq("id", id);
+
+  if(updateError){
+    console.log("WITHDRAW UPDATE ERROR:", updateError);
+    alert(updateError.message);
+    return;
+  }
+
+  const { data:userData, error:userError } = await client
+    .from("users")
+    .select("coins")
+    .eq("id", uid)
+    .maybeSingle();
+
+  if(userError || !userData){
+    alert("User not found ❌");
+    return;
+  }
+
+  await client
+    .from("users")
+    .update({
+      coins:Number(userData.coins || 0) + Number(amount)
+    })
+    .eq("id", uid);
+
+  await client
+    .from("transactions")
+    .update({
+      status:"rejected",
+      rejection_reason:reason
+    })
+    .eq("withdraw_id", id);
+
+  await client
+    .from("notifications")
+    .insert([{
+      uid: uid,
+      title: "❌ Withdraw Rejected",
+      message: `Your withdraw request was rejected.\nReason: ${reason}`,
+      type: "withdraw",
+      is_read: false
+    }]);
+
+  await client
+    .from("audit_logs")
+    .insert([{
+      admin_id: admin?.id || null,
+      actions: "withdraw_rejected",
+      target_user: uid,
+      amount: Number(amount),
+      status: "rejected",
+      reason: reason
+    }]);
+
+  alert("Withdraw Rejected ❌");
+  loadWithdraws();
+}
+
+
+/* 🔔 ADD NOTIFICATION */
+async function addNotification(uid, title, message){
+
+  const { error } = await client
+    .from("notifications")
+    .insert([{
+      user_id: uid,
+      title: title,
+      message: message,
+      is_read: false
+    }]);
+
+  if(error){
+    console.log("NOTIFICATION ERROR:", error);
+  }
+}
+
+
+/* ⚡ REALTIME */
+client
+.channel("live-withdraws")
+.on(
+  "postgres_changes",
+  {
+    event:"*",
+    schema:"public",
+    table:"withdraws"
+  },
+  () => {
+    loadWithdraws();
+  }
+)
+.subscribe();
+
+/* 🚀 INIT */
+loadWithdraws();
+
+  async function checkAdmin(){
+
+  const {
+    data:{ user }
+  } = await client.auth.getUser();
+
+  if(!user){
+
+    window.location.href =
+    "admin-login.html";
+
+    return;
+  }
+
+  const { data } =
+  await client
+  .from("users")
+  .select("is_admin")
+  .eq("id",user.id)
+  .single();
+
+  if(!data?.is_admin){
+
+    window.location.href =
+    "admin-login.html";
+
+  }
+
+}
+
+checkAdmin();
+
+</script>
+
+</body>
+</html>
