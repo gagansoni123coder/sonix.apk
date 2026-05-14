@@ -41,12 +41,6 @@ jobs:
         run: |
           mkdir -p www
           cp -r *.html *.css *.js assets www/ || true
-          cp -r *.css www/ || true
-          cp -r *.js www/ || true
-          cp -r assets www/assets || true
-          cp -r images www/images || true
-          cp manifest.json www/ || true
-          cp sw.js www/ || true
 
       - name: Add Android
         run: |
