@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SoniX Withdraw</title>
+
+<link rel="stylesheet" href="withdraw.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="transaction.js" defer></script>
+<script src="notification.js" defer></script>
+
+</head>
+
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="title-box">
+    <img src="logo.png" class="logo">
+    <span>SoniX Withdraw</span>
+  </div>
+
+  <div class="coins-box">
+    🪙 <span id="coins">0</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-card">
+
+  <h2>Withdraw Coins</h2>
+
+  <div class="balance-box">
+    ₹<span id="balance">0</span>
+  </div>
+
+  <div class="input-box">
+    <label>Amount</label>
+    <input type="number" id="amount" placeholder="Enter amount">
+  </div>
+
+  <div class="input-box">
+    <label>UPI / Paytm</label>
+    <input type="text" id="upi" placeholder="Enter UPI ID">
+  </div>
+
+  <button onclick="withdrawNow()">
+    Withdraw Now
+  </button>
+
+  <div class="rules">
+    • Minimum Withdraw ₹70 <br>
+    • Daily Limit ₹350
+  </div>
+
+</div>
+
+<!-- HISTORY -->
+<div class="history-box">
+  <h3>Recent Withdraws</h3>
+  <div id="history"></div>
+</div>
+
+<script>
+
+/* =========================
+   SUPABASE INIT
+========================= */
+
+const client = window.supabase.createClient(
+  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+);
+
+/* =========================
+   LOAD USER
+========================= */
+
+async function loadUser(){
+
+const { data:{ user } } = await client.auth.getUser();
+
+if(!user){
+  window.location.href = "login.html";
+  return;
+}
+
+const { data, error } = await client
+.from("users")
+.select("coins")
+.eq("id", user.id)
+.single();
+
+if(error){
+  console.log(error);
+  return;
+}
+
+document.getElementById("coins").innerText = data.coins || 0;
+document.getElementById("balance").innerText = data.coins || 0;
+
+}
+
+/* =========================
+   LOAD HISTORY
+========================= */
+
+async function loadHistory(){
+
+const { data:{ user } } = await client.auth.getUser();
+if(!user) return;
+
+const { data, error } = await client
+.from("withdraws")
+.select("*")
+.eq("user_id", user.id)
+.order("created_at", { ascending:false });
+
+if(error){
+  console.log(error);
+  return;
+}
+
+const box = document.getElementById("history");
+
+if(!data || data.length === 0){
+  box.innerHTML = "<p>No withdraws yet 😴</p>";
+  return;
+}
+
+let html = "";
+
+data.forEach(w => {
+
+html +=` 
+<div class="history-card">
+
+  <div class="top">
+    <span>₹${w.amount}</span>
+    <span class="status ${w.status}">
+      ${w.status}
+    </span>
+  </div>
+
+  <div class="bottom">
+    <p>🆔 ${w.id}</p>
+    <p>${new Date(w.created_at).toLocaleString()}</p>
+  </div>
+
+  ${
+    w.status === "rejected"
+    ? `<div class="reason">❌ ${w.rejection_reason || ""}</div>`
+    : ""
+  }
+
+</div>
+`;
+
+});
+
+box.innerHTML = html;
+
+}
+
+/* =========================
+   WITHDRAW FUNCTION
+========================= */
+
+async function withdrawNow(){
+
+const amount = Number(document.getElementById("amount").value);
+const upi = document.getElementById("upi").value;
+
+if(!amount || amount < 70){
+  alert("Minimum withdraw ₹70");
+  return;
+}
+
+if(!upi){
+  alert("Enter UPI ID");
+  return;
+}
+
+/* USER */
+
+const { data:{ user } } = await client.auth.getUser();
+
+/* GET USER DATA */
+
+const { data:userData } = await client
+.from("users")
+.select("coins")
+.eq("id", user.id)
+.single();
+
+/* CHECK BALANCE */
+
+if(userData.coins < amount){
+  alert("Not enough balance");
+  return;
+}
+
+/* CUT COINS */
+
+const newCoins = userData.coins - amount;
+
+await client
+.from("users")
+.update({ coins:newCoins })
+.eq("id", user.id);
+
+/* INSERT WITHDRAW */
+
+const { data:inserted } = await client
+.from("withdraws")
+.insert([{
+  user_id: user.id,
+  amount: amount,
+  upi: upi,
+  status: "pending"
+}])
+.select();
+
+/* TRANSACTION LOG */
+if(typeof addTransaction === "function"){
+await addTransaction({
+  uid: user.id,
+  type: "withdraw",
+  title: "Withdraw Request",
+  amount: -amount,
+  status: "pending"
+});
+}
+
+/* NOTIFICATION */
+
+if(typeof addNotification === "function"){
+await addNotification({
+  uid: user.id,
+  title: "💸 Withdraw Requested",
+  message: `Your withdraw request of ₹${amount} is under review.`,
+  type: "withdraw"
+});
+}
+
+/* SUCCESS */
+
+alert("Withdraw request submitted 🔥");
+
+document.getElementById("amount").value = "";
+document.getElementById("upi").value = "";
+
+loadUser();
+loadHistory();
+
+}
+
+/* =========================
+   REALTIME UPDATE
+========================= */
+
+client
+.channel("withdraw-live")
+.on("postgres_changes", {
+  event: "*",
+  schema: "public",
+  table: "withdraws"
+}, payload => {
+
+loadHistory();
+
+})
+.subscribe();
+
+/* =========================
+   INIT
+========================= */
+
+loadUser();
+loadHistory();
+
+</script>
+
+</body>
+</html>
