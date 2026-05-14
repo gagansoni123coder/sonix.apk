@@ -16,25 +16,39 @@ jobs:
         with:
           node-version: 20
 
-      - name: Create WWW Folder
-        run: |
-          mkdir -p www
-          cp -r *.html www/ || true
-          cp -r *.css www/ || true
-          cp -r *.js www/ || true
-          cp -r assets www/assets || true
-          cp -r images www/images || true
-          cp manifest.json www/ || true
-          cp sw.js www/ || true
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
 
       - name: Install Capacitor
-        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Create package.json
+        run: |
+          echo '{
+            "name":"sonix",
+            "version":"1.0.0"
+          }' > package.json
 
       - name: Init Capacitor
-        run: npx cap init "SoniX Esports" "com.sonix.esports" --web-dir=www
+        run: |
+          npx cap init sonix com.sonix.esports --web-dir=.
+
+      - name: Create WWW folder
+        run: |
+          mkdir -p www
+          cp -r *.html *.css *.js assets www/ || true
 
       - name: Add Android
-        run: npx cap add android
+        run: |
+          npx cap add android
+
+      - name: Copy Web Files
+        run: |
+          npx cap copy
 
       - name: Build APK
         run: |
@@ -47,13 +61,3 @@ jobs:
         with:
           name: sonix-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
-
-- name: Setup Node
-  uses: actions/setup-node@v4
-  with:
-    node-version: 20
-- name: Setup Java
-  uses: actions/setup-java@v4
-  with:
-    distribution: 'temurin'
-    java-version: '21'
