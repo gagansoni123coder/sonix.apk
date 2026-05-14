@@ -35,6 +35,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        - name: Install Capacitor Assets
+        run: npm install @capacitor/ --save-dev
+
+      - name: Generate App Icons
+        run: npx capacitor-assets generate --iconBackgroundColor '#ff0000'
 
       - name: Create WWW folder
         run: |
