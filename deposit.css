@@ -29,17 +29,13 @@ h2 {
   margin: 10px auto;
 }
 
-
-
-/ TIMER /
-#timer {
+.timer {
   color: yellow;
   margin: 15px 0;
   font-size: 22px;
 }
 
-/ BUTTON */
-button {
+.button {
   padding: 12px 25px;
   border: none;
   border-radius: 10px;
@@ -50,7 +46,33 @@ button {
   transition: 0.3s;
 }
 
-button:hover {
+.button:hover {
   transform: scale(1.05);
   box-shadow: 0 0 15px cyan;
+}
+.back-btn{
+  position:fixed;
+  top:14px;
+  left:14px;
+  width:42px;
+  height:42px;
+  border:none;
+  border-radius:50%;
+  background:rgba(20,20,20,.85);
+  box-shadow:0 0 15px rgba(255,0,0,.55);
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.back-btn img{
+  width:22px;
+  height:22px;
+  object-fit:contain;
+}
+
+.back-btn:active{
+  transform:scale(.92);
 }
