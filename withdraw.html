@@ -15,7 +15,11 @@
 </head>
 
 <body>
-
+  
+<button class="back-btn" onclick="goBack()">
+  <img src="assets/back.png" alt="Back">
+</button>
+  
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="title-box">
@@ -274,6 +278,14 @@ loadHistory();
 
 })
 .subscribe();
+
+function goBack(){
+  if(history.length > 1){
+    history.back();
+  }else{
+    window.location.href = "home.html";
+  }
+}
 
 /* =========================
    INIT
