@@ -8,6 +8,10 @@
 
 <body>
 
+  <button class="back-btn" onclick="goBack()">
+  <img src="assets/back.png" alt="Back">
+  </button>
+
 <!-- TOP CARD -->
 <div class="top-card">
   <h1>💼 My Wallet</h1>
@@ -105,6 +109,14 @@ loadCoins();
       loadCoins();
     }
   )
+
+function goBack(){
+  if(history.length > 1){
+    history.back();
+  }else{
+    window.location.href = "home.html";
+  }
+}
   .subscribe();
 </script>
 
