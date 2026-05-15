@@ -7,10 +7,14 @@
 
 <body>
 
+  <button class="back-btn" onclick="goBack()">
+  <img src="assets/back.png" alt="Back">
+  </button>
+
 <h1>💰 Deposit</h1>
 
 <div class="box">
-  <img src="qr.png" style="width:290px; height:300px; display:block; margin:auto;">
+  <img src="assets/qr.png" style="width:290px; height:300px; display:block; margin:auto;">
 
   <p>Scan & Pay</p>
 
@@ -92,6 +96,14 @@ async function paid(){
   alert("✅ Request sent! Wait for admin approval");
 
   window.location.href = "wallet.html";
+}
+  
+function goBack(){
+  if(history.length > 1){
+    history.back();
+  }else{
+    window.location.href = "wallet.html";
+  }
 }
 </script>
 
