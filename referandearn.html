@@ -1,264 +1,225 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
-  <title>Refer & Earn</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-     </script> 
-  <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:sans-serif;
-    }
+  <title>SoniX Refer</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
 
-    body{
-      background:#050505;
-      height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      color:#fff;
-      overflow:hidden;
-    }
+body{
+background:#050505;
+color:white;
+min-height:100vh;
+}
 
-    /* 🔥 Glow Background */
-    body::before{
-      content:"";
-      position:absolute;
-      width:500px;
-      height:500px;
-      background:radial-gradient(circle,#ff0000,transparent);
-      filter:blur(120px);
-      opacity:0.5;
-      animation:move 6s infinite alternate;
-    }
+.page{
+padding:20px;
+}
 
-    @keyframes move{
-      0%{transform:translate(-150px,-150px);}
-      100%{transform:translate(150px,150px);}
-    }
+.top-card{
+background:#111;
+border:2px solid red;
+border-radius:25px;
+padding:25px;
+box-shadow:0 0 30px rgba(255,0,0,0.5);
+}
 
-    /* 🎮 CARD */
-    .card{
-      width:90%;
-      max-width:340px;
-      padding:25px;
-      border-radius:20px;
-      background:#111;
-      box-shadow:0 0 25px rgba(255,0,0,0.4);
-      text-align:center;
-      z-index:2;
-    }
+.top-card h1{
+color:#ff2d2d;
+font-size:30px;
+text-shadow:0 0 15px red;
+}
 
-    .card h2{
-      margin-bottom:15px;
-    }
+.top-card p{
+margin-top:5px;
+color:#aaa;
+}
 
-    /* UID */
-    .uid{
-      font-size:30px;
-      margin:15px 0;
-      color:#ff3b3b;
-      letter-spacing:3px;
-      font-weight:bold;
-    }
+.code-box{
+margin-top:20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#1a1a1a;
+padding:15px;
+border-radius:15px;
+border:1px solid red;
+}
 
-    /* BUTTON */
-    button{
-      width:100%;
-      padding:12px;
-      margin-top:10px;
-      border:none;
-      border-radius:10px;
-      background:linear-gradient(45deg,#ff0000,#ff4d4d);
-      color:#fff;
-      cursor:pointer;
-      font-size:15px;
-      box-shadow:0 0 10px rgba(255,0,0,0.5);
-    }
+.code-box span{
+font-size:22px;
+font-weight:bold;
+}
 
-    /* LINK */
-    .link-box{
-      margin-top:10px;
-      font-size:12px;
-      color:#aaa;
-      word-break:break-all;
-    }
+button{
+background:linear-gradient(45deg,#ff0000,#7a0000);
+border:none;
+padding:12px 18px;
+border-radius:12px;
+color:white;
+font-weight:bold;
+box-shadow:0 0 20px rgba(255,0,0,0.6);
+}
 
-    #count{
-      margin-top:10px;
-      color:#ccc;
-    }
+.create-box{
+margin-top:15px;
+}
 
-    /* 🏆 LEADERBOARD */
-    .leaderboard{
-      position:fixed;
-      left:-260px;
-      top:0;
-      width:260px;
-      height:100%;
-      background:#111;
-      padding:15px;
-      transition:0.3s;
-      overflow:auto;
-      box-shadow:5px 0 20px rgba(255,0,0,0.5);
-      z-index:5;
-    }
+.create-box input{
+width:100%;
+padding:14px;
+border:none;
+outline:none;
+border-radius:12px;
+background:#0d0d0d;
+border:1px solid red;
+color:white;
+margin-bottom:10px;
+}
 
-    .leaderboard.active{
-      left:0;
-    }
+.stats{
+margin-top:20px;
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+}
 
-    .lb-item{
-      background:#1a1a1a;
-      padding:10px;
-      margin:8px 0;
-      border-radius:10px;
-      display:flex;
-      justify-content:space-between;
-    }
+.card{
+background:#111;
+padding:20px;
+border-radius:18px;
+text-align:center;
+border:1px solid rgba(255,0,0,0.5);
+box-shadow:0 0 15px rgba(255,0,0,0.2);
+}
 
-    /* OPEN BUTTON */
-    .open-btn{
-      position:fixed;
-      left:10px;
-      top:50%;
-      transform:translateY(-50%);
-      background:red;
-      border:none;
-      color:#fff;
-      padding:12px;
-      border-radius:50%;
-      font-size:18px;
-      cursor:pointer;
-      z-index:6;
-      box-shadow:0 0 15px red;
-    }
+.card h2{
+font-size:26px;
+color:#ff3030;
+}
 
-  </style></head><body><!-- 🏆 LEADERBOARD --><div id="board" class="leaderboard">
-  <h3>🏆 Top Referrals</h3>
-  <div id="lb"></div>
-</div><button class="open-btn" onclick="toggleBoard()">🏆</button>
+.card p{
+margin-top:5px;
+font-size:13px;
+color:#aaa;
+}
 
-<!-- 🎮 CARD --><div class="card">  <h2>Refer & Earn</h2>  <div class="uid" id="uid">Loading...</div><button onclick="copyUID()">Copy Code</button>
-<button onclick="shareLink()">Share</button>
+.share-btn{
+margin-top:20px;
+width:100%;
+}
 
-  <div id="link" class="link-box"></div>
-  <p id="count"></p></div><script>
+.title{
+margin-top:25px;
+margin-bottom:15px;
+color:#ff3030;
+}
 
-const client = window.supabase.createClient(
-  "https://ggkqsfkxmmusrmczoyuk.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI"
+.ref-item{
+background:#111;
+padding:15px;
+border-radius:14px;
+margin-bottom:12px;
+border-left:4px solid red;
+}
+
+.ref-item p{
+margin-top:6px;
+color:#aaa;
+font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+  <div class="top-card">
+
+    <h1>REFER & EARN</h1>
+    <p>Invite friends and earn rewards</p>
+
+    <div class="code-box">
+      <span id="myCode">Loading...</span>
+      <button onclick="copyCode()">COPY</button>
+    </div>
+
+    <div class="create-box">
+      <input type="text" id="customCode" placeholder="Create Custom Code">
+      <button onclick="createReferralCode()">Create Code</button>
+    </div>
+
+  </div>
+
+  <div class="stats">
+
+    <div class="card">
+      <h2 id="totalRefs">0</h2>
+      <p>Total Referrals</p>
+    </div>
+
+    <div class="card">
+      <h2 id="successRefs">0</h2>
+      <p>Successful</p>
+    </div>
+
+    <div class="card">
+      <h2 id="earnings">₹0</h2>
+      <p>Earnings</p>
+    </div>
+
+  </div>
+
+  <button class="share-btn" onclick="shareCode()">
+    Share On WhatsApp
+  </button>
+
+  <h2 class="title">Recent Referrals</h2>
+
+  <div id="refList"></div>
+
+</div>
+
+  <script>
+  const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+const supabase = window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
 );
 
-/* LOAD USER */
-async function loadUser(){
+document.getElementById("myCode").innerText = "NO CODE";
 
-  const { data:{ user } } = await client.auth.getUser();
+function copyCode(){
+const code =
+document.getElementById("myCode").innerText;
 
-  if(!user){
-    location.href="login.html";
-    return;
-  }
+navigator.clipboard.writeText(code);
 
-  const { data } = await client
-  .from("users")
-  .select("uid")
-  .eq("id", user.id)
-  .single();
-
-  const uid = data.uid;
-
-  /* SHORT UID (clean look) */
-  const shortUID = uid.length > 10 ? uid.slice(0,6).toUpperCase() : uid;
-
-  document.getElementById("uid").innerText = shortUID;
-
-  const link = location.origin + "/register.html?ref=" + uid;
-
-  document.getElementById("link").innerText = link;
-
-  loadCount(uid);
+alert("Code Copied");
 }
 
-/* COPY */
-function copyUID(){
-  const t = document.getElementById("uid").innerText;
-  navigator.clipboard.writeText(t);
-  alert("Copied ✅");
+function shareCode(){
+
+const code =
+document.getElementById("myCode").innerText;
+
+const text =
+Join SoniX Esports using my referral code: ${code};
+
+window.open(
+https://wa.me/?text=${encodeURIComponent(text)}
+);
+
 }
+    </script>
 
-/* SHARE */
-function shareLink(){
-  const link = document.getElementById("link").innerText;
-if(navigator.share){
-    navigator.share({
-      title:"Join SoniX Esports",
-      text:"Use my referral code 🔥",
-      url:link
-    });
-  }else{
-    copyUID();
-  }
-}
-
-/* COUNT */
-async function loadCount(uid){
-
-  const { count } = await client
-  .from("users")
-  .select("*",{count:"exact",head:true})
-  .eq("referred_by", uid);
-
-  document.getElementById("count").innerText =
-  "Referrals: " + (count || 0);
-}
-
-/* LEADERBOARD */
-async function loadLeaderboard(){
-
-  const { data } = await client
-  .from("users")
-  .select("referred_by");
-
-  const map = {};
-
-  data.forEach(u=>{
-    if(u.referred_by){
-      map[u.referred_by] =
-      (map[u.referred_by]||0)+1;
-    }
-  });
-
-  const sorted = Object.entries(map)
-  .sort((a,b)=>b[1]-a[1])
-  .slice(0,10);
-
-  let html="";
-
-  sorted.forEach((x,i)=>{
-    html+=`
-    <div class="lb-item">
-      <span>#${i+1} ${x[0]}</span>
-      <span>${x[1]}</span>
-    </div>`;
-  });
-
-  document.getElementById("lb").innerHTML =
-  html || "No data";
-}
-
-/* TOGGLE */
-function toggleBoard(){
-  document.getElementById("board")
-  .classList.toggle("active");
-}
-
-/* INIT */
-loadUser();
-loadLeaderboard();
-
-</script>
 </body>
 </html>
