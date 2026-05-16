@@ -185,7 +185,217 @@ font-size:13px;
   <div id="refList"></div>
 
 </div>
+<script>
 
+const SUPABASE_URL = "https://ggkqsfkxmmusrmczoyuk.supabase.co";
+
+const SUPABASE_KEY =
+"YOUR_ANON_KEY";
+
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let currentUser = null;
+
+loadUser();
+
+async function loadUser(){
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if(!user){
+    alert("Please Login First");
+    return;
+  }
+
+  currentUser = user;
+
+  loadMyReferralCode();
+  loadReferralStats();
+  listenLiveReferrals();
+
+}
+
+async function loadMyReferralCode(){
+
+  const { data, error } = await supabase
+  .from("users")
+  .select("referral_code")
+  .eq("id", currentUser.id)
+  .single();
+
+  if(error){
+    console.log(error);
+    return;
+  }
+
+  if(data?.referral_code){
+    document.getElementById("myCode").innerText =
+    data.referral_code;
+  }
+  else{
+    document.getElementById("myCode").innerText =
+    "NO CODE";
+  }
+
+}
+
+async function createReferralCode(){
+
+  const input =
+  document.getElementById("customCode");
+
+  let code =
+  input.value.trim().toUpperCase();
+
+  if(code.length < 4){
+    alert("Code minimum 4 letters ka hona chahiye");
+    return;
+  }
+
+  code = code.replace(/\s/g, "");
+
+  const { data: existing } = await supabase
+  .from("users")
+  .select("id")
+  .eq("referral_code", code)
+  .maybeSingle();
+
+  if(existing){
+    alert("Ye code already used hai");
+    return;
+  }
+
+  const { error } = await supabase
+  .from("users")
+  .update({
+    referral_code: code
+  })
+  .eq("id", currentUser.id);
+
+  if(error){
+    console.log(error);
+    alert("Error saving code");
+    return;
+  }
+
+  document.getElementById("myCode").innerText =
+  code;
+
+  alert("Referral Code Created");
+
+}
+
+function copyCode(){
+
+  const code =
+  document.getElementById("myCode").innerText;
+
+  navigator.clipboard.writeText(code);
+
+  alert("Code Copied");
+
+}
+
+function shareCode(){
+
+  const code =
+  document.getElementById("myCode").innerText;
+
+  const text =
+  `Join SoniX Esports using my referral code: ${code}`;
+
+  window.open(
+    `https://wa.me/?text=${encodeURIComponent(text)}`
+  );
+
+}
+
+async function loadReferralStats(){
+
+  const { data: refs } = await supabase
+  .from("referrals")
+  .select("*")
+  .eq("referrer_id", currentUser.id);
+
+  const { data: earnings } = await supabase
+  .from("referral_earnings")
+  .select("commission_amount")
+  .eq("referrer_id", currentUser.id);
+
+  const totalRefs =
+  refs?.length || 0;
+
+  const successRefs =
+  refs?.filter(r =>
+    r.status === "successful"
+  ).length || 0;
+
+  const totalEarn =
+  earnings?.reduce((sum, item)=>
+    sum + Number(item.commission_amount),
+  0) || 0;
+
+  document.getElementById("totalRefs").innerText =
+  totalRefs;
+
+  document.getElementById("successRefs").innerText =
+  successRefs;
+
+  document.getElementById("earnings").innerText =
+  "₹" + totalEarn;
+
+  let html = "";
+
+  refs?.forEach(ref => {
+
+    html += `
+      <div class="ref-item">
+        <b>Status: ${ref.status}</b>
+        <p>Matches Joined:
+        ${ref.join_count}/${ref.required_joins}</p>
+
+        <p>Code Used:
+        ${ref.referral_code}</p>
+      </div>
+    `;
+
+  });
+
+  document.getElementById("refList").innerHTML =
+  html;
+
+}
+
+function listenLiveReferrals(){
+
+  supabase
+  .channel("live-referrals")
+
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "referrals",
+      filter: `referrer_id=eq.${currentUser.id}`
+    },
+
+    () => {
+      loadReferralStats();
+    }
+
+  )
+
+  .subscribe();
+
+}
+
+    </script>
   
 </body>
 </html>
