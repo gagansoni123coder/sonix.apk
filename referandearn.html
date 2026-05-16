@@ -205,7 +205,7 @@ async function loadUser(){
 
   const {
     data: { user }
-  } = await supabase.auth.getUser();
+  } = await db.auth.getUser();
 
   if(!user){
     alert("Please Login First");
@@ -222,7 +222,7 @@ async function loadUser(){
 
 async function loadMyReferralCode(){
 
-  const { data, error } = await supabase
+  const { data, error } = await db
   .from("users")
   .select("referral_code")
   .eq("id", currentUser.id)
@@ -259,7 +259,7 @@ async function createReferralCode(){
 
   code = code.replace(/\s/g, "");
 
-  const { data: existing } = await supabase
+  const { data: existing } = await db
   .from("users")
   .select("id")
   .eq("referral_code", code)
@@ -270,7 +270,7 @@ async function createReferralCode(){
     return;
   }
 
-  const { error } = await supabase
+  const { error } = await db
   .from("users")
   .update({
     referral_code: code
@@ -317,12 +317,12 @@ function shareCode(){
 
 async function loadReferralStats(){
 
-  const { data: refs } = await supabase
+  const { data: refs } = await db
   .from("referrals")
   .select("*")
   .eq("referrer_id", currentUser.id);
 
-  const { data: earnings } = await supabase
+  const { data: earnings } = await db
   .from("referral_earnings")
   .select("commission_amount")
   .eq("referrer_id", currentUser.id);
@@ -373,7 +373,7 @@ async function loadReferralStats(){
 
 function listenLiveReferrals(){
 
-  supabase
+  db
   .channel("live-referrals")
 
   .on(
