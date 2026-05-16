@@ -316,25 +316,31 @@ async function loadUser(){
 async function loadMyReferralCode(){
 
   const { data, error } = await db
-  .from("users")
-  .select("referral_code")
-  .eq("id", currentUser.id)
-  .single();
+    .from("users")
+    .select("referral_code")
+    .eq("id", currentUser.id)
+    .single();
 
   if(error){
     console.log(error);
     return;
   }
 
-  if(data?.referral_code){
-    document.getElementById("myCode").innerText =
-    data.referral_code;
-  }
-  else{
-    document.getElementById("myCode").innerText =
-    "NO CODE";
-  }
+  const createBox = document.querySelector(".create-box");
 
+  if(data && data.referral_code && data.referral_code !== ""){
+    document.getElementById("myCode").innerText = data.referral_code;
+
+    if(createBox){
+      createBox.style.display = "none";
+    }
+  } else {
+    document.getElementById("myCode").innerText = "NO CODE";
+
+    if(createBox){
+      createBox.style.display = "block";
+    }
+  }
 }
 
 async function createReferralCode(){
