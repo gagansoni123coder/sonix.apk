@@ -220,7 +220,8 @@ async function approveDeposit(id, uid, amount){
     .from("users")
     .update({ coins:newCoins })
     .eq("id", userId);
-
+await giveReferralCommission(uid, amount);
+      
   if(coinError){
     alert(coinError.message);
     return;
@@ -373,7 +374,7 @@ client
             
 
 loadDeposits();
-            async function checkAdmin(){
+async function checkAdmin(){
 
   const {
     data:{ user }
@@ -404,6 +405,73 @@ loadDeposits();
 }
 
 checkAdmin();
+async function giveReferralCommission(userId, depositAmount){
+
+  // referred_by nikaalo
+  const { data: userData, error: userError } = await client
+    .from("users")
+    .select("referred_by")
+    .eq("id", userId)
+    .single();
+
+  if(userError || !userData){
+    console.log(userError);
+    return;
+  }
+
+  // agar referred user hi nahi h
+  if(!userData.referred_by){
+    return;
+  }
+
+  // referral successful hai ya nahi check
+  const { data: referralData } = await client
+    .from("referrals")
+    .select("*")
+    .eq("referred_user_id", userId)
+    .eq("status", "successful")
+    .maybeSingle();
+
+  if(!referralData){
+    return;
+  }
+
+  // 10% commission
+  const commission =
+  Number(depositAmount) * 0.10;
+
+  // referrer ka wallet lao
+  const { data: referrer } = await client
+    .from("users")
+    .select("wallet_balance")
+    .eq("id", userData.referred_by)
+    .single();
+
+  // wallet update
+  await client
+    .from("users")
+    .update({
+      wallet_balance:
+      Number(referrer.wallet_balance || 0)
+      + commission
+    })
+    .eq("id", userData.referred_by);
+
+  // earning log insert
+  await client
+    .from("referral_earnings")
+    .insert({
+      referrer_id: userData.referred_by,
+      referred_user_id: userId,
+      deposit_amount: depositAmount,
+      commission_amount: commission,
+      commission_percent: 10,
+      status: "paid"
+    });
+
+  console.log("Referral commission added");
+
+}
 </script>
   
 </body>
