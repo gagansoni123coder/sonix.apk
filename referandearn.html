@@ -186,40 +186,6 @@ font-size:13px;
 
 </div>
 
-  <script>
-  const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
-
-const supabase = window.supabase.createClient(
-SUPABASE_URL,
-SUPABASE_KEY
-);
-
-document.getElementById("myCode").innerText = "NO CODE";
-
-function copyCode(){
-const code =
-document.getElementById("myCode").innerText;
-
-navigator.clipboard.writeText(code);
-
-alert("Code Copied");
-}
-
-function shareCode(){
-
-const code =
-document.getElementById("myCode").innerText;
-
-const text =
-`Join SoniX Esports using my referral code: ${code}`;
-
-window.open(
-`https://wa.me/?text=${encodeURIComponent(text)}`
-);
-
-}
-    </script>
-
+  
 </body>
 </html>
