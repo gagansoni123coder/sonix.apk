@@ -184,7 +184,9 @@ async function loadDeposits(){
 }
 
 async function approveDeposit(id, uid, amount){
-  const { data:check, error:checkError } = await client
+
+  // 1. Deposit check
+  const { data: check, error: checkError } = await client
     .from("deposits")
     .select("id,status,uid,amount")
     .eq("id", id)
@@ -192,7 +194,7 @@ async function approveDeposit(id, uid, amount){
 
   if(checkError || !check){
     console.log("CHECK ERROR:", checkError);
-    alert("Deposit not found ❌ ID: " + id);
+    alert("Deposit not found ❌");
     return;
   }
 
@@ -201,7 +203,8 @@ async function approveDeposit(id, uid, amount){
     return;
   }
 
-  const { data:userData, error:userError } = await client
+  // 2. User fetch
+  const { data: userData, error: userError } = await client
     .from("users")
     .select("id, coins")
     .eq("id", uid)
@@ -214,35 +217,51 @@ async function approveDeposit(id, uid, amount){
   }
 
   const userId = userData.id;
-  const newCoins = Number(userData.coins || 0) + Number(amount);
 
-  const { error:coinError } = await client
+  // 3. New coins
+  const newCoins =
+    Number(userData.coins || 0)
+    + Number(amount);
+
+  // 4. Coins update
+  const { error: coinError } = await client
     .from("users")
-    .update({ coins:newCoins })
+    .update({
+      coins: newCoins
+    })
     .eq("id", userId);
-await giveReferralCommission(uid, amount);
-      
+
   if(coinError){
+    console.log("COIN ERROR:", coinError);
     alert(coinError.message);
     return;
   }
 
-  const { error:depositError } = await client
+  // 5. Deposit approve
+  const { error: depositError } = await client
     .from("deposits")
-    .update({ status:"approved" })
+    .update({
+      status:"approved"
+    })
     .eq("id", id);
 
   if(depositError){
+    console.log("DEPOSIT ERROR:", depositError);
     alert(depositError.message);
     return;
   }
 
+  // 6. Referral commission
+  await giveReferralCommission(uid, amount);
+
+  // 7. Notification
   await addNotification(
     userId,
     "✅ Deposit Approved",
-    `Your deposit of ₹${amount} has been approved 🎮🔥`
+   ` Your deposit of ₹${amount} has been approved 🎮🔥`
   );
 
+  // 8. Audit log
   await addAuditLog({
     action:"deposit_approved",
     targetUser:userId,
@@ -252,9 +271,10 @@ await giveReferralCommission(uid, amount);
   });
 
   alert("✅ Deposit Approved");
-  loadDeposits();
-}
 
+  loadDeposits();
+
+}
 async function rejectDeposit(id, uid, amount){
   const reason = prompt("Enter reject reason");
   if(!reason) return;
