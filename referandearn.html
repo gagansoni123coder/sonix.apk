@@ -298,12 +298,7 @@ async function loadUser(){
 
   const {
     data: { user }
-  } = await db.auth.getUser();
-
-  if(!user){
-    alert("Please Login First");
-    return;
-  }
+  } = await db.auth.getUser();  
 
   currentUser = user;
 
