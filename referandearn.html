@@ -251,9 +251,17 @@ font-size:13px;
 
   </div>
 
-  <button class="share-btn" onclick="shareCode()">
-    Share On WhatsApp
+<div class="share-buttons">
+
+  <button class="share-btn" onclick="copyInviteLink()">
+    Copy Invite Link
   </button>
+
+  <button class="share-btn" onclick="copyCodeOnly()">
+    Copy Refer Code
+  </button>
+
+</div>
 
   <div class="conditions-box">
   <h2>Refer Conditions</h2>
@@ -360,19 +368,37 @@ function copyCode(){
 
 }
 
-function shareCode(){
+function copyInviteLink(){
 
   const code =
   document.getElementById("myCode").innerText;
 
   const text =
-  `Join SoniX Esports using my referral code: ${code}`;
+`Join SoniX Esports now!
 
-  window.open(
-    `https://wa.me/?text=${encodeURIComponent(text)}`
-  );
+Use my referral code:
+${code}
+
+Download Now:
+https://Soniesports-eight.vercel.app`;
+
+  navigator.clipboard.writeText(text);
+
+  alert("Invite Link Copied");
 
 }
+
+function copyCodeOnly(){
+
+  const code =
+  document.getElementById("myCode").innerText;
+
+  navigator.clipboard.writeText(code);
+
+  alert("Referral Code Copied");
+
+}
+  
 
 async function loadReferralStats(){
 
