@@ -133,6 +133,56 @@ margin-top:6px;
 color:#aaa;
 font-size:13px;
 }
+  .popup-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+
+.popup-box{
+  width:90%;
+  max-width:380px;
+  background:#111;
+  border:2px solid red;
+  border-radius:22px;
+  padding:22px;
+  text-align:center;
+  box-shadow:0 0 35px rgba(255,0,0,0.7);
+}
+
+.popup-box h2{
+  color:#ff2b2b;
+  text-shadow:0 0 15px red;
+  margin-bottom:12px;
+}
+
+.popup-note{
+  color:#ff3333;
+  font-size:13px;
+  margin:15px 0;
+}
+
+.popup-buttons{
+  display:flex;
+  gap:12px;
+}
+
+.popup-buttons button{
+  width:100%;
+}
+
+.cancel-btn{
+  background:#333;
+  box-shadow:none;
+}
+
+.confirm-btn{
+  background:linear-gradient(45deg,#ff0000,#7a0000);
+}
 </style>
 </head>
 
@@ -246,11 +296,8 @@ async function loadMyReferralCode(){
 
 async function createReferralCode(){
 
-  const input =
-  document.getElementById("customCode");
-
-  let code =
-  input.value.trim().toUpperCase();
+  const input = document.getElementById("customCode");
+  let code = input.value.trim().toUpperCase();
 
   if(code.length < 4){
     alert("Code minimum 4 letters ka hona chahiye");
@@ -259,35 +306,12 @@ async function createReferralCode(){
 
   code = code.replace(/\s/g, "");
 
-  const { data: existing } = await db
-  .from("users")
-  .select("id")
-  .eq("referral_code", code)
-  .maybeSingle();
+  pendingReferralCode = code;
 
-  if(existing){
-    alert("Ye code already used hai");
-    return;
-  }
+  document.getElementById("confirmText").innerText =
+  `Are you sure to make "${code}" your refer code?`;
 
-  const { error } = await db
-  .from("users")
-  .update({
-    referral_code: code
-  })
-  .eq("id", currentUser.id);
-
-  if(error){
-    console.log(error);
-    alert("Error saving code");
-    return;
-  }
-
-  document.getElementById("myCode").innerText =
-  code;
-
-  alert("Referral Code Created");
-
+  document.getElementById("confirmPopup").style.display = "flex";
 }
 
 function copyCode(){
@@ -394,8 +418,66 @@ function listenLiveReferrals(){
   .subscribe();
 
 }
+function cancelReferralPopup(){
+  pendingReferralCode = "";
+  document.getElementById("confirmPopup").style.display = "none";
+}
 
+async function confirmReferralCode(){
+
+  const code = pendingReferralCode;
+
+  if(!code){
+    return;
+  }
+
+  const { data: existing } = await db
+    .from("users")
+    .select("id")
+    .eq("referral_code", code)
+    .maybeSingle();
+
+  if(existing){
+    alert("Ye code already used hai");
+    cancelReferralPopup();
+    return;
+  }
+
+  const { error } = await db
+    .from("users")
+    .update({ referral_code: code })
+    .eq("id", currentUser.id);
+
+  if(error){
+    console.log(error);
+    alert("Error saving code");
+    return;
+  }
+
+  document.getElementById("myCode").innerText = code;
+  document.querySelector(".create-box").style.display = "none";
+
+  cancelReferralPopup();
+
+  alert("Referral Code Created Permanently");
+}
     </script>
   
+  <div id="confirmPopup" class="popup-overlay">
+  <div class="popup-box">
+    <h2>Confirm Refer Code</h2>
+
+    <p id="confirmText"></p>
+
+    <p class="popup-note">
+      Note: Refer code will be created only one time. You can't change/edit it later.
+    </p>
+
+    <div class="popup-buttons">
+      <button class="cancel-btn" onclick="cancelReferralPopup()">Cancel</button>
+      <button class="confirm-btn" onclick="confirmReferralCode()">Confirm</button>
+    </div>
+  </div>
+  </div>
 </body>
 </html>
