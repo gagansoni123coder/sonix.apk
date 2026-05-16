@@ -20,8 +20,7 @@
       <input type="email" id="email" placeholder="Email" required>
       <input type="tel" id="phone" placeholder="Phone" required>
       <input type="password" id="password" placeholder="Password" required>
-      <input type="text" id="refer" placeholder="Refer Code (Optional)">
-
+    <input type="text" id="referralInput" placeholder="Referral Code (Optional)">
       <button type="submit" id="regBtn">
         <span class="btn-text">REGISTER</span>
         <span class="loader"></span>
@@ -142,7 +141,8 @@ form.addEventListener("submit", async (e) => {
   }
 
   btn.innerText = "SUCCESS ✔";
-
+await applyReferralCode(user.id);
+  
   alert("✔ Registeration successfull");
 
   setTimeout(() => {
@@ -211,6 +211,61 @@ window.addEventListener("resize", () => {
   canvas.height = window.innerHeight;
   init();
 });
+  
+  async function applyReferralCode(newUserId){
+
+  const input = document.getElementById("referralInput");
+  if(!input) return;
+
+  let code = input.value.trim().toUpperCase();
+
+  if(code === ""){
+    return;
+  }
+
+  code = code.replace(/\s/g, "");
+
+  const { data: referrer, error: refError } = await db
+    .from("users")
+    .select("id, referral_code")
+    .eq("referral_code", code)
+    .maybeSingle();
+
+  if(refError){
+    console.log(refError);
+    alert("Referral code check error");
+    return;
+  }
+
+  if(!referrer){
+    alert("Invalid referral code");
+    return;
+  }
+
+  if(referrer.id === newUserId){
+    alert("Apna khud ka referral code use nahi kar sakte");
+    return;
+  }
+
+  await db
+    .from("users")
+    .update({
+      referred_by: referrer.id
+    })
+    .eq("id", newUserId);
+
+  await db
+    .from("referrals")
+    .insert({
+      referrer_id: referrer.id,
+      referred_user_id: newUserId,
+      referral_code: code,
+      join_count: 0,
+      required_joins: 3,
+      status: "pending"
+    });
+
+}
 </script>
 </body>
 </html>
