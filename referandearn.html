@@ -185,45 +185,7 @@ font-size:13px;
   <div id="refList"></div>
 
 </div>
-<script>
-  const SUPABASE_URL = "https://ggkqsfkxmmusrmczoyuk.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdna3FzZmt4bW11c3JtY3pveXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyNjg2NDIsImV4cCI6MjA5MDg0NDY0Mn0.p5Y2FFlNsFweZ2yc290eRs92mVKJTLnEU2C2y-qZZBI";
 
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-document.getElementById("myCode").innerText = "NO CODE";
-
-async function createReferralCode() {
-  const input = document.getElementById("customCode");
-  let code = input.value.trim().toUpperCase();
-
-  if (code.length < 4) {
-    alert("Code minimum 4 letters ka hona chahiye");
-    return;
-  }
-
-  code = code.replace(/\s/g, "");
-
-  document.getElementById("myCode").innerText = code;
-  alert("Referral Code Created: " + code);
-}
-
-function copyCode() {
-  const code = document.getElementById("myCode").innerText;
-  navigator.clipboard.writeText(code);
-  alert("Code Copied");
-}
-
-function shareCode() {
-  const code = document.getElementById("myCode").innerText;
-  const text = `Join SoniX Esports using my referral code: ${code}`;
-
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
-}
-</script>
   
 </body>
 </html>
