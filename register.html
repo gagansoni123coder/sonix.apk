@@ -225,7 +225,7 @@ window.addEventListener("resize", () => {
 
   code = code.replace(/\s/g, "");
 
-  const { data: referrer, error: refError } = await db
+  const { data: referrer, error: refError } = await supabaseClient
     .from("users")
     .select("id, referral_code")
     .eq("referral_code", code)
@@ -247,14 +247,14 @@ window.addEventListener("resize", () => {
     return;
   }
 
-  await db
+  await supabaseClient
     .from("users")
     .update({
       referred_by: referrer.id
     })
     .eq("id", newUserId);
 
-  await db
+  await supabaseClient
     .from("referrals")
     .insert({
       referrer_id: referrer.id,
