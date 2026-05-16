@@ -230,7 +230,9 @@ async function approveDeposit(id, uid, amount){
       coins: newCoins
     })
     .eq("id", userId);
-
+console.log("NEW COINS:", newCoins);
+console.log("USER ID:", userId);
+      
   if(coinError){
     console.log("COIN ERROR:", coinError);
     alert(coinError.message);
